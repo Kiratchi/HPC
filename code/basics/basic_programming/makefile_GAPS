@@ -1,0 +1,8 @@
+.PHONY : all
+all INSERT
+
+first_executable : INSERT
+	INSERT -o INSERT first_c_program.c
+
+INSERT : first_c_program.c potential_header.h
+	gcc -o second_executable first_c_program.c

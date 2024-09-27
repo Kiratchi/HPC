@@ -1,0 +1,6 @@
+
+Punkter som short int ( ab.cde representeras som abcd)
+Distanser som short unsigned int
+
+Det finns int sqrt funktioner
+https://rosettacode.org/wiki/Isqrt_(integer_square_root)_of_X#C

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.html": "html",
+        "potential_header.h": "c",
+        "stdio.h": "c",
+        "random": "c"
+    }
+}

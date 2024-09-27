@@ -1,0 +1,36 @@
+	.file	"assembler.c"
+	.text
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.LC0:
+	.string	"The sum is %li\n"
+	.text
+	.globl	main
+	.type	main, @function
+main:
+.LFB22:
+	.cfi_startproc
+	subq	$8, %rsp
+	.cfi_def_cfa_offset 16
+	movl	$0, %eax
+	movl	$0, %edx
+	jmp	.L2
+	.p2align 4
+.L3:
+	addq	%rax, %rdx
+	addq	$1, %rax
+.L2:
+	cmpq	$999999999, %rax
+	jle	.L3
+	movl	$.LC0, %esi
+	movq	stdout(%rip), %rdi
+	movl	$0, %eax
+	call	fprintf
+	movl	$0, %eax
+	addq	$8, %rsp
+	.cfi_def_cfa_offset 8
+	ret
+	.cfi_endproc
+.LFE22:
+	.size	main, .-main
+	.ident	"GCC: (GNU) 14.1.1 20240701 (Red Hat 14.1.1-7)"
+	.section	.note.GNU-stack,"",@progbits
