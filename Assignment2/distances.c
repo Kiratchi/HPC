@@ -17,32 +17,39 @@ int main(int argc, char const *argv[])
 
     // Each row is 24 characters, with \n (new row) or terminate.
 
-    //ASCII
-    // + has number 00101011 in bytes, 053 in decimal, 2B in hexadecimal
-    // -, 00101101, 055, 2D
-    // ., 00101110, 056, 2E
-    // " ", 00100000, 040, 20    (This is blankspace)
-    // 0, 00110000, 060, 30
-    // ...
-    // 9, 00111001, 071, 39
-
+    /*  
+      ---------ASCII---------
+        byte        Dec     Hex 
+    +   00101011    053     2B
+    -   00101101    055     2D
+    .   00101110    056     2E
+    " " 00100000    040     20    (This is blankspace)
+    0   00110000    060     30
+    ...
+    9    00111001    071     39
+    */
+    
     FILE *file = fopen("cells", "r");
 
     if (file == NULL) {
-        printf("Error opening file!\n");
+        printf("Error opening file cells!\n");
         return 1;
     }
     
-    int size = 10;
-    char *cells = (char*) malloc(sizeof(char) * 24*size);
-    int *result = (int*) malloc(sizeof(int) * 3465);
-    float *rows = (float*) malloc(sizeof(float) * 3 * size);
-    float **vectors = (float**) malloc(sizeof(float*) * size);
+    const int block_size = 10; 
+    const int char_per_row = 24;
     
-    fread(cells, sizeof(char), 24*size, file);
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * block_size);
+    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465?
+    float *rows = (float*) malloc(sizeof(float) * 3 * block_size);
+    float **vectors = (float**) malloc(sizeof(float*) * block_size);
+    
+    fread(cells, sizeof(char), char_per_row * block_size, file);
     fclose(file);
+    
+   
 
-    for (int ix = 0; ix < 24*size; ++ix){
+    for (int ix = 0; ix < char_per_row * block_size; ++ix){
         for (int jx = 0; jx < 3; ++jx){
             if (jx = 0){
                 vectors[ix][0] = atof(cells[0+24*ix:7+24*ix]);
@@ -80,7 +87,6 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-
 
 float distance(float c_1[3], float c_2[3]){
 
