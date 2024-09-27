@@ -9,13 +9,13 @@ z in [0,x]
 t in [-x,x]
 */
 unsigned short
-isqrt(short x) {
-    int q = 1, r = 0;
+isqrt(unsigned int x) {
+    unsigned int q = 1, r = 0;
     while (q <= x) {
         q <<= 2;
     }
     while (q > 1) {
-        int t;
+        int t;      //Tillräckigt stort???
         q >>= 2;
         t = x - r - q;
         r >>= 1;
