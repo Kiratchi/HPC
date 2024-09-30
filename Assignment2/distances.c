@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 // #include <time.h>
 
 // anvand float istallet for double, osb! eg sqrtf() istallet for sqrt() 
@@ -29,6 +30,17 @@ int main(int argc, char const *argv[])
     9    00111001    071     39
     */
     
+    const int block_size = 10; 
+    const int char_per_row = 24;
+    
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * block_size);
+    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465? För att max distance är 34.64 och vi vill ha alla möjliga distanser i en lista
+    float **rows = (float**) malloc(sizeof(float*) * block_size);
+    for (int ix = 0; ix < block_size; ++ix){
+        rows[ix] = (float*) malloc(sizeof(float) * 3);
+    }
+
+
     FILE *file = fopen("cells", "r");
 
     if (file == NULL) {
@@ -36,44 +48,39 @@ int main(int argc, char const *argv[])
         return 1;
     }
     
-    const int block_size = 10; 
-    const int char_per_row = 24;
-    
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * block_size);
-    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465? För att max distance är 34.64 och vi vill ha alla möjliga distancer i en lista
-    float *rows = (float*) malloc(sizeof(float) * 3 * block_size);
-    float **vectors = (float**) malloc(sizeof(float*) * block_size);
-    
     fread(cells, sizeof(char), char_per_row * block_size, file);
     fclose(file);
     
    
+    for (int ix = 0; ix < block_size; ++ix){
+        char temp[8];
 
-    for (int ix = 0; ix < char_per_row * block_size; ++ix){
-        for (int jx = 0; jx < 3; ++jx){
-            if (jx = 0){
-                vectors[ix][0] = atof(cells[0+24*ix:7+24*ix]);
-            }
-            else if (jx = 1){
-                vectors[ix][1] = atof(cells[8+24*ix:15+24*ix]);
-            }
-            else {
-                vectors[ix][2] = atof(cells[16+24*ix:23+24*ix]);
-            }
-        }
+        strncpy(temp, &cells[ix * char_per_row], 7);
+        temp[7] = '\0';
+        rows[ix][0] = atof(temp);
+
+        strncpy(temp, &cells[ix * char_per_row + 8], 7);
+        temp[7] = '\0';
+        rows[ix][1] = atof(temp);
+
+        strncpy(temp, &cells[ix * char_per_row + 16], 7);
+        temp[7] = '\0';
+        rows[ix][2] = atof(temp);
     }
 
-    // for (int ix = 0; ix < 24*size; ++ix){
-    //     printf("%c", cells[ix]);
+    // // Print the rows
+    // for (int ix = 0; ix < block_size; ++ix){
+    //     printf("%f %f %f\n", rows[ix][0], rows[ix][1], rows[ix][2]);
     // }
-    // printf("\n");
-    
 
-    // Howdy howdy½
-
-    // hej hej
-
-
+    // Calculate the distances (inte kollat på vilka distanser som räknas...)
+    for (int ix = 0; ix < block_size; ++ix){
+        for (int jx = ix + 1; jx < block_size; ++jx){
+            float dist = distance(rows[ix], rows[jx]);
+            int dist_int = (int) (dist * 100);
+            result[dist_int] += 1;
+        }
+    }
 
     // RESULT
     for (int ix = 0; ix < 3465; ++ix){
@@ -84,7 +91,6 @@ int main(int argc, char const *argv[])
 
     free(result);
     free(cells);
-    free(vectors);
     free(rows);
 
     return 0;
