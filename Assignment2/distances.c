@@ -30,13 +30,14 @@ int main(int argc, char const *argv[])
     9    00111001    071     39
     */
     
-    const int block_size = 10; 
+    const int rows_per_block = 10; 
     const int char_per_row = 24;
+    const int max_distance = 3465; // = sqrt(20^2*3)
     
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * block_size);
-    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465? För att max distance är 34.64 och vi vill ha alla möjliga distanser i en lista
-    float **rows = (float**) malloc(sizeof(float*) * block_size);
-    for (int ix = 0; ix < block_size; ++ix){
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_block);
+    int *result = (int*) malloc(sizeof(int) * max_distance);
+    float **rows = (float**) malloc(sizeof(float*) * rows_per_block);
+    for (int ix = 0; ix < rows_per_block; ++ix){
         rows[ix] = (float*) malloc(sizeof(float) * 3);
     }
 
@@ -48,12 +49,12 @@ int main(int argc, char const *argv[])
         return 1;
     }
     
-    fread(cells, sizeof(char), char_per_row * block_size, file);
+    fread(cells, sizeof(char), char_per_row * rows_per_block, file);
     fclose(file);
     
    
-    for (int ix = 0; ix < block_size; ++ix){
-        char temp[8];
+    for (int ix = 0; ix < rows_per_block; ++ix){
+        char temp[8];   //Borde vi annvända 3 olika temp så att operationerna inte behöver ske efter varandra?
 
         strncpy(temp, &cells[ix * char_per_row], 7);
         temp[7] = '\0';
@@ -74,8 +75,8 @@ int main(int argc, char const *argv[])
     // }
 
     // Calculate the distances (inte kollat på vilka distanser som räknas...)
-    for (int ix = 0; ix < block_size; ++ix){
-        for (int jx = ix + 1; jx < block_size; ++jx){
+    for (int ix = 0; ix < rows_per_block; ++ix){
+        for (int jx = ix + 1; jx < rows_per_block; ++jx){
             float dist = distance(rows[ix], rows[jx]);
             int dist_int = (int) (dist * 100);
             result[dist_int] += 1;
