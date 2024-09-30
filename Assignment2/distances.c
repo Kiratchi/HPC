@@ -102,7 +102,7 @@ float distance(float c_1[3], float c_2[3]){
     float dist_2 = (c_1[1]-c_2[1]);
     float dist_3 = (c_1[2]-c_2[2]);
 
-    float dist = sqrt(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3);
+    float dist = sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3);
     
     return dist;
 }
