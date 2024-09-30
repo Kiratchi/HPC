@@ -76,8 +76,10 @@ int main(int argc, char const *argv[])
 
 
     // RESULT
-    for (int ix = 0; ix < 34; ++ix){
-        printf("%02d.%02d %d\n", ix/100, ix%100, result[ix]);
+    for (int ix = 0; ix < 3465; ++ix){
+        if (result[ix] != 0){
+            printf("%02d.%02d %d\n", ix/100, ix%100, result[ix]);
+        }
     }
 
     free(result);
