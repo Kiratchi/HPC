@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
     const int char_per_row = 24;
     
     char *cells = (char*) malloc(sizeof(char) * char_per_row * block_size);
-    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465?
+    int *result = (int*) malloc(sizeof(int) * 3465);    //Varför 3465? För att max distance är 34.64 och vi vill ha alla möjliga distancer i en lista
     float *rows = (float*) malloc(sizeof(float) * 3 * block_size);
     float **vectors = (float**) malloc(sizeof(float*) * block_size);
     
