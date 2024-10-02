@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]) {
     const unsigned int max_distance = 3465; // from sqrt(20^2*3)
     int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
     
-    FILE *file = fopen("cells_1e4", "r");
+    FILE *file = fopen("cells_1e5", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         return 1;
@@ -65,26 +65,32 @@ int main(int argc, char const *argv[]) {
         rows[ix] = (float*) malloc(sizeof(float) * 3);
     }
     
+    // #pragma omp parallel for //reduction( + : rows[:max_distance][:2] )
     for (int jx = 0; jx < rows_per_file; jx += rows_per_block) {
         
+        //#pragma omp atomic
         fseek(file, jx*char_per_row, SEEK_SET);
         fread(cells, sizeof(char), char_per_row * rows_per_block, file);
         
         for (int ix = 0; ix < rows_per_block; ++ix) {
-            char temp[8];
+            sscanf(cells + ix*char_per_row, "%f %f %f", &rows[ix+jx][0], &rows[ix+jx][1], &rows[ix+jx][2]);
+            
+            // char temp[8];
 
-            strncpy(temp, &cells[ix * char_per_row], 7);
-            temp[7] = '\0';
-            rows[ix + jx][0] = atof(temp);
+            // strncpy(temp, &cells[ix * char_per_row], 7);
+            // temp[7] = '\0';
+            // rows[ix + jx][0] = atof(temp);
 
-            strncpy(temp, &cells[ix * char_per_row + 8], 7);
-            temp[7] = '\0';
-            rows[ix + jx][1] = atof(temp);
+            // strncpy(temp, &cells[ix * char_per_row + 8], 7);
+            // temp[7] = '\0';
+            // rows[ix + jx][1] = atof(temp);
 
-            strncpy(temp, &cells[ix * char_per_row + 16], 7);
-            temp[7] = '\0';
-            rows[ix + jx][2] = atof(temp);
+            // strncpy(temp, &cells[ix * char_per_row + 16], 7);
+            // temp[7] = '\0';
+            // rows[ix + jx][2] = atof(temp);
+            
         }
+
     }
 
     fclose(file);
@@ -94,9 +100,7 @@ int main(int argc, char const *argv[]) {
     //     result = calculation(rows, result, rows_per_file, max_distance);
     // }
 
-    for (int i = 0 ; i < max_distance; ++i){
-        result[i] = 0;
-    }
+
 
     #pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < rows_per_file; ++ix) {
