@@ -36,7 +36,7 @@ int main(int argc, char const *argv[]) {
 
     omp_set_num_threads(T);
     
-    
+
     const int rows_per_block = 5;
     int last_block_size;            // Lägg in det här senare!!! 
     int rows_per_file;
@@ -66,11 +66,6 @@ int main(int argc, char const *argv[]) {
 
     fseek(file, 0, SEEK_SET);
     fread(cells, sizeof(char), char_per_row * rows_per_file, file);
-    //#pragma omp parallel for
-    // for (size_t i = 0; i < rows_per_file; i += rows_per_block) {
-        
-    //     fseek(file, rows_per_block*char_per_row, SEEK_CUR);
-    //     fread(cells, sizeof(char), char_per_row * rows_per_file, file);
 
         
     # pragma omp parallel for
