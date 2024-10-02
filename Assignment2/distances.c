@@ -3,58 +3,55 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>
 
 // anvand float istallet for double, osb! eg sqrtf() istallet for sqrt() 
 // kolla pa locality_block_auxillary.c
 
 float distance(float c_1[3], float c_2[3]);
 
-int main(int argc, char const *argv[])
-{
-    // Step 1, reading and parsing the file
+int main(int argc, char const *argv[]) {
 
-    // We know that 256 bytes is usefull.
-    // Should we use cachelines of some sort? Not shure?
-
-    // Each row is 24 characters, with \n (new row) or terminate.
-
-    /*  
-      ---------ASCII---------
-        byte        Dec     Hex 
-    +   00101011    053     2B
-    -   00101101    055     2D
-    .   00101110    056     2E
-    " " 00100000    040     20    (This is blankspace)
-    0   00110000    060     30
-    ...
-    9    00111001    071     39
-    */
+    // First for loop for calculating all the distances, and then append to some list
     
-    const int rows_per_block = 10000; 
+    const int rows_per_block = 5;
+    int last_block_size;            // Lägg in det här senare!!! 
+    int rows_per_file;
     const int char_per_row = 24;
-    const int max_distance = 3465; // = sqrt(20^2*3)
+    const int max_distance = 3465; // from sqrt(20^2*3)
+    int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
+
+    FILE *file = fopen("cells", "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file cells!\n");
+        return 1;
+    }
     
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_block);
-    int *result = (int*) malloc(sizeof(int) * max_distance);
-    float **rows = (float**) malloc(sizeof(float*) * rows_per_block);
-    for (int ix = 0; ix < rows_per_block; ++ix){
+    fseek(file, 0, SEEK_END);
+    rows_per_file = ftell(file) / char_per_row;
+    if (rows_per_file % rows_per_block != 0) {
+        fprintf(stderr, "Number of rows not divisible by %i\n", rows_per_block);
+        return 1;
+    }
+
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_file);
+    float **rows = (float**) malloc(sizeof(float*) * rows_per_file);
+    for (int ix = 0; ix < rows_per_file; ++ix){
         rows[ix] = (float*) malloc(sizeof(float) * 3);
     }
 
 
-    FILE *file = fopen("cells_1e4", "r");
+    fseek(file, 0, SEEK_SET);
+    fread(cells, sizeof(char), char_per_row * rows_per_file, file);
+    //#pragma omp parallel for
+    // for (size_t i = 0; i < rows_per_file; i += rows_per_block) {
+        
+    //     fseek(file, rows_per_block*char_per_row, SEEK_CUR);
+    //     fread(cells, sizeof(char), char_per_row * rows_per_file, file);
 
-    if (file == NULL) {
-        printf("Error opening file cells!\n");
-        return 1;
-    }
-    
-    fread(cells, sizeof(char), char_per_row * rows_per_block, file);
-    fclose(file);
-    
-   
-    for (int ix = 0; ix < rows_per_block; ++ix){
-        char temp[8];   //Borde vi annvända 3 olika temp så att operationerna inte behöver ske efter varandra?
+        
+    for (int ix = 0; ix < rows_per_file; ++ix) {
+        char temp[8];   //Borde vi använda 3 olika temp så att operationerna inte behöver ske efter varandra?
 
         strncpy(temp, &cells[ix * char_per_row], 7);
         temp[7] = '\0';
@@ -68,15 +65,12 @@ int main(int argc, char const *argv[])
         temp[7] = '\0';
         rows[ix][2] = atof(temp);
     }
-
-    // // Print the rows
-    // for (int ix = 0; ix < block_size; ++ix){
-    //     printf("%f %f %f\n", rows[ix][0], rows[ix][1], rows[ix][2]);
     // }
+    fclose(file);
 
-    // Calculate the distances (inte kollat på vilka distanser som räknas...)
-    for (int ix = 0; ix < rows_per_block; ++ix){
-        for (int jx = ix + 1; jx < rows_per_block; ++jx){
+    // Calculate the distances
+    for (int ix = 0; ix < rows_per_file; ++ix){
+        for (int jx = ix + 1; jx < rows_per_file; ++jx){
             float dist = distance(rows[ix], rows[jx]) * 100;
             dist = round(dist);
             int dist_int = (int) (dist);
@@ -86,9 +80,7 @@ int main(int argc, char const *argv[])
 
     // Initialize the random number generator
     srand(time(NULL));
-    // Generate a random index between 0 and rows_per_block
-    int ix = rand() % (rows_per_block + 1);
-    // Print the value at rows[ix][2]
+    int ix = rand() % (rows_per_file + 1);
     printf("Random value from rows[%i][2]: %f\n", ix, rows[ix][2]);
 
     // RESULT

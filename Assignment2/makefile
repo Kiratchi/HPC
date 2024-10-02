@@ -1,14 +1,10 @@
 CC = gcc
-CFLAGS = -O2 -march=native
+CFLAGS = -O2 -lm  #-march=native
 
 PHONY: all
-all: distances isqrt d_calculator
+all: distances
 
 distances : distances.c
-
-isqrt : isqrt.c
-
-d_calculator : d_calculator.c
 
 clean : 
 	rm -rf \ 
