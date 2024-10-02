@@ -4,11 +4,15 @@ Double är over the top. Många grupper beräknar med mycket högre precission �
 INPUT
 Inputdatan får plats som shorts (inte säkert det är bäst)
 Optimering av input är inte så viktigt då hela inläsnings steget är snabbt
-
+atof eller fscan är enkla alternativ. Bit manipulation är snabbare (men det tar så lite tid så är inte värt det). 
+För bit manipulation går "+" och "-" översätta utan if statment
+Att ladda in i hela block är bara marginelt långsammare än en dynamisk inladdning
+Ceckscriptet tittar bara på filer av storlek 1e4 och 1e5.
 
 RESULTS
 Annvänd en större typ än shorts för att spara frekvenser. antalet kopplingar är n*(n-1)/2 
 Results borde ligga på heap
+Alla distanser är inte lika troliga. Kan vara värt att ändra ordningen på resultvektorn
 
 OUTPUT
 Se till att få med 0 i outputdatan ex 03.15
@@ -17,4 +21,7 @@ Errorbounds är 10% => trunkering är inga problem
 MEMORY
 Att annvända mindre minne är bra för hastighet då stor cache är värre än läsa från fil ofta 
 => Testa hur mycket som ska läsas in åt gången
+Tänk på hur stor l2 cache är. Det går att bestämma optimal block size genom att räkna fram det
 
+PARALLIZATION
+advanced reduction är mest relevant
