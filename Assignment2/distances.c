@@ -36,7 +36,7 @@ int main(int argc, char const *argv[]) {
 
     omp_set_num_threads(T);
     
-    
+
     const int rows_per_block = 5;
     int last_block_size;            // Lägg in det här senare!!! 
     int rows_per_file;
