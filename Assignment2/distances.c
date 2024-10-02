@@ -12,16 +12,39 @@ float distance(float c_1[3], float c_2[3]);
 
 int main(int argc, char const *argv[]) {
 
-    // First for loop for calculating all the distances, and then append to some list
+    // Read arguments from command line
+    if (argc != 2){
+        fprintf(stderr, "Usage: %s -tT where T is number of threads\n", argv[0]);
+        return 1;
+    }
 
-    omp_set_num_threads(10);
-    const int rows_per_block = 1000;
+    int T = 0;
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            int value = atoi(&argv[i][2]);  
+            if (argv[i][1] == 't') {
+                T = value;
+            } else {
+                fprintf(stderr, "Unknown option: %s\n, should be -t", argv[i]);
+                return 1;
+            }
+        } else {
+            fprintf(stderr, "Unknown option: %s\n, should start with -", argv[i]);
+            return 1;
+        }
+    }
+
+    omp_set_num_threads(T);
+    
+    
+    const int rows_per_block = 5;
     int last_block_size;            // Lägg in det här senare!!! 
     int rows_per_file;
     const int char_per_row = 24;
     const unsigned int max_distance = 3465; // from sqrt(20^2*3)
     int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
 
+    FILE *file = fopen("cells_1e4", "r");
     FILE *file = fopen("cells_1e4", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
@@ -80,6 +103,7 @@ int main(int argc, char const *argv[]) {
     // Calculate the distances
     // #pragma omp parallel for
     for (int ix = 0; ix < rows_per_file; ++ix){
+        # pragma omp parallel for
         for (int jx = ix + 1; jx < rows_per_file; ++jx){
             float dist = distance(rows[ix], rows[jx]) * 100;
             dist = round(dist);
