@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -lm -fopenmp #-march=native
+CFLAGS = -O2 -g -lm -fopenmp #-march=native
 
 PHONY: all
 all: distances
