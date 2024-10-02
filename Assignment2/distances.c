@@ -13,15 +13,16 @@ float distance(float c_1[3], float c_2[3]);
 int main(int argc, char const *argv[]) {
 
     // First for loop for calculating all the distances, and then append to some list
-    
-    const int rows_per_block = 5;
+
+    omp_set_num_threads(10);
+    const int rows_per_block = 1000;
     int last_block_size;            // Lägg in det här senare!!! 
     int rows_per_file;
     const int char_per_row = 24;
-    const int max_distance = 3465; // from sqrt(20^2*3)
+    const unsigned int max_distance = 3465; // from sqrt(20^2*3)
     int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
 
-    FILE *file = fopen("cells", "r");
+    FILE *file = fopen("cells_1e4", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         return 1;
@@ -42,33 +43,42 @@ int main(int argc, char const *argv[]) {
 
 
     fseek(file, 0, SEEK_SET);
-    fread(cells, sizeof(char), char_per_row * rows_per_file, file);
-    //#pragma omp parallel for
-    // for (size_t i = 0; i < rows_per_file; i += rows_per_block) {
+    // fread(cells, sizeof(char), char_per_row * rows_per_file, file);
+    // #pragma omp parallel for
+    for (size_t i = 0; i < rows_per_file; i += rows_per_block) {
         
-    //     fseek(file, rows_per_block*char_per_row, SEEK_CUR);
-    //     fread(cells, sizeof(char), char_per_row * rows_per_file, file);
+        fread(cells, sizeof(char), char_per_row * rows_per_block, file);
 
-        
-    for (int ix = 0; ix < rows_per_file; ++ix) {
-        char temp[8];   //Borde vi använda 3 olika temp så att operationerna inte behöver ske efter varandra?
+        for (int ix = 0; ix < rows_per_block; ++ix) {
+            // fscanf(file, "%f %f %f", &rows[ix+1][0], &rows[ix+1][1], &rows[ix+1][2]);
+            // printf("%f %f %f", rows[ix+1][0], rows[ix+1][1], rows[ix+1][2]);
+            
+            char temp[8];   //Borde vi använda 3 olika temp så att operationerna inte behöver ske efter varandra?
 
-        strncpy(temp, &cells[ix * char_per_row], 7);
-        temp[7] = '\0';
-        rows[ix][0] = atof(temp);
+            strncpy(temp, &cells[ix * char_per_row], 7);
+            temp[7] = '\0';
+            rows[ix + i][0] = atof(temp);
 
-        strncpy(temp, &cells[ix * char_per_row + 8], 7);
-        temp[7] = '\0';
-        rows[ix][1] = atof(temp);
+            strncpy(temp, &cells[ix * char_per_row + 8], 7);
+            temp[7] = '\0';
+            rows[ix + i][1] = atof(temp);
 
-        strncpy(temp, &cells[ix * char_per_row + 16], 7);
-        temp[7] = '\0';
-        rows[ix][2] = atof(temp);
+            strncpy(temp, &cells[ix * char_per_row + 16], 7);
+            temp[7] = '\0';
+            rows[ix + i][2] = atof(temp);
+        }
     }
-    // }
     fclose(file);
 
+    // for (int i = 0; i < 10 ; i++) {
+    //     printf("%f", rows[i][0]);
+    //     printf("  %f", rows[i][1]);
+    //     printf("  %f\n", rows[i][2]);
+    // }
+
+
     // Calculate the distances
+    // #pragma omp parallel for
     for (int ix = 0; ix < rows_per_file; ++ix){
         for (int jx = ix + 1; jx < rows_per_file; ++jx){
             float dist = distance(rows[ix], rows[jx]) * 100;
