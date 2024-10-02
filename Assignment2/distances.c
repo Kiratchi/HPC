@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
+// #include <string.h>
 #include <time.h>
 #include <omp.h>
 
-// anvand float istallet for double, osb! eg sqrtf() istallet for sqrt() 
-// kolla pa locality_block_auxillary.c
 
 float distance(float c_1[3], float c_2[3]);
 
@@ -37,14 +35,13 @@ int main(int argc, char const *argv[]) {
     omp_set_num_threads(T);
     
 
-    const int rows_per_block = 5;
+    // const int rows_per_block = 5;
     int last_block_size;            // Lägg in det här senare!!! 
     int rows_per_file;
     const int char_per_row = 24;
     const unsigned int max_distance = 3465; // from sqrt(20^2*3)
     int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
 
-    FILE *file = fopen("cells_1e4", "r");
     FILE *file = fopen("cells_1e4", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
@@ -53,57 +50,41 @@ int main(int argc, char const *argv[]) {
     
     fseek(file, 0, SEEK_END);
     rows_per_file = ftell(file) / char_per_row;
-    if (rows_per_file % rows_per_block != 0) {
-        fprintf(stderr, "Number of rows not divisible by %i\n", rows_per_block);
-        return 1;
-    }
+    // if (rows_per_file % rows_per_block != 0) {
+    //     fprintf(stderr, "Number of rows not divisible by %i\n", rows_per_block);
+    //     return 1;
+    // }
+    fseek(file, 0, SEEK_SET);
 
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_file);
+    // char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_file);
     float **rows = (float**) malloc(sizeof(float*) * rows_per_file);
     for (int ix = 0; ix < rows_per_file; ++ix){
         rows[ix] = (float*) malloc(sizeof(float) * 3);
     }
 
 
-    fseek(file, 0, SEEK_SET);
     // fread(cells, sizeof(char), char_per_row * rows_per_file, file);
-    // #pragma omp parallel for
-    for (size_t i = 0; i < rows_per_file; i += rows_per_block) {
-        
-        fread(cells, sizeof(char), char_per_row * rows_per_block, file);
-
+    /*
+    #pragma omp parallel for
+    for (size_t block = 0; block < rows_per_file; block += rows_per_block) {
+        #pragma omp critical
         for (int ix = 0; ix < rows_per_block; ++ix) {
-            // fscanf(file, "%f %f %f", &rows[ix+1][0], &rows[ix+1][1], &rows[ix+1][2]);
-            // printf("%f %f %f", rows[ix+1][0], rows[ix+1][1], rows[ix+1][2]);
-            
-            char temp[8];   //Borde vi använda 3 olika temp så att operationerna inte behöver ske efter varandra?
-
-            strncpy(temp, &cells[ix * char_per_row], 7);
-            temp[7] = '\0';
-            rows[ix + i][0] = atof(temp);
-
-            strncpy(temp, &cells[ix * char_per_row + 8], 7);
-            temp[7] = '\0';
-            rows[ix + i][1] = atof(temp);
-
-            strncpy(temp, &cells[ix * char_per_row + 16], 7);
-            temp[7] = '\0';
-            rows[ix + i][2] = atof(temp);
+            fscanf(file, "%f %f %f", &rows[ix+block][0], &rows[ix+block][1], &rows[ix+block][2]);
         }
     }
+    */
+
+    // Read rows
+    #pragma omp parallel for default(none) shared(file, rows, rows_per_file)
+    for (size_t ix = 0; ix < rows_per_file; ++ix) {
+        fscanf(file, "%f %f %f", &rows[ix][0], &rows[ix][1], &rows[ix][2]);
+    }
+    
     fclose(file);
 
-    // for (int i = 0; i < 10 ; i++) {
-    //     printf("%f", rows[i][0]);
-    //     printf("  %f", rows[i][1]);
-    //     printf("  %f\n", rows[i][2]);
-    // }
-
-
-    // Calculate the distances
-    // #pragma omp parallel for
-    for (int ix = 0; ix < rows_per_file; ++ix){
-        # pragma omp parallel for
+    // Calculate distances
+    #pragma omp parallel for default(none) shared(rows_per_file, rows, result)
+    for (int ix = 0; ix < rows_per_file; ++ix) {
         for (int jx = ix + 1; jx < rows_per_file; ++jx){
             float dist = distance(rows[ix], rows[jx]) * 100;
             dist = round(dist);
@@ -112,23 +93,15 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    // Initialize the random number generator
-    srand(time(NULL));
-    int ix = rand() % (rows_per_file + 1);
-    printf("Random value from rows[%i][2]: %f\n", ix, rows[ix][2]);
-
     // RESULT
-    for (int ix = 0; ix < 3465; ++ix){
+    for (int ix = 0; ix < 3465; ++ix) {
         if (result[ix] != 0){
             printf("%02d.%02d %d\n", ix/100, ix%100, result[ix]);
         }
     }
-
-    // This seems to work/print the correct stuff
-    // printf("%f\n", rows[6][2]);
-
+    
     free(result);
-    free(cells);
+    // free(cells);
     free(rows);
 
     return 0;
