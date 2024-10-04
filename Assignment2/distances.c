@@ -13,11 +13,10 @@ static inline int* allocate_result();
 static inline int count_file_lines(FILE *file);
 static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_file);
 static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file);
-static inline float compute_distance(const float *c_1, const float *c_2);
+static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
 static const int rows_per_block = 1000;
-
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -25,7 +24,7 @@ int main(int argc, char const *argv[]) {
 
     omp_set_num_threads(determine_thread_count(argc, argv));
     
-    FILE *file = fopen("cells_1e5", "r");
+    FILE *file = fopen("cells", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         return 1;
@@ -130,7 +129,7 @@ static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_fil
         fseek(file, jx*char_per_row, SEEK_SET);
         fread(cells, sizeof(char), char_per_row * rows_per_block, file);
         
-        // # pragma omp for
+        // # pragma omp parallell for
         for (int ix = 0; ix < rows_per_block; ++ix) {
             sscanf(cells + ix*char_per_row, "%f %f %f", &rows[ix+jx][0], &rows[ix+jx][1], &rows[ix+jx][2]);      
         }
@@ -143,19 +142,19 @@ static inline void calculate_distance_frequencies(float **rows, int *result, int
     # pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < rows_per_file; ++ix) {
         for (int jx = ix + 1; jx < rows_per_file; ++jx){
-            float dist = compute_distance(rows[ix], rows[jx]) * 100;
-            result[(int) (dist+0.5)] += 1;
+            int dist = (int) compute_distance_index(rows[ix], rows[jx]);
+            result[dist] += 1;
         }
     }
 }
 
-static inline float compute_distance(const float* c_1, const float* c_2){
+static inline float compute_distance_index(const float* c_1, const float* c_2){
 
     float dist_1 = (c_1[0]-c_2[0]);
     float dist_2 = (c_1[1]-c_2[1]);
     float dist_3 = (c_1[2]-c_2[2]);
 
-    float dist = sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3);
+    float dist = sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3) * 100 + 0.5;
     
     return dist;
 }
