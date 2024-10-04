@@ -1,0 +1,2 @@
+command,mean,stddev,median,user,system,min,max
+systemd-run --user --scope --property=CPUQuota=500%  --property=MemoryMax=10240K ./distances -t5,7.46422555222,0.05652305007304983,7.46422555222,20.753434560000002,0.01727432,7.42425772022,7.504193384220001

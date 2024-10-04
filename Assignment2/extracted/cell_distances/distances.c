@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]) {
 
     omp_set_num_threads(determine_thread_count(argc, argv));
     
-    FILE *file = fopen("cells_1e5", "r");
+    FILE *file = fopen("cells", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         return 1;
@@ -175,6 +175,7 @@ static inline void calculate_distance_frequencies(short **rows, int *result, int
     for (int ix = 0; ix < rows_per_file; ++ix) {
         for (int jx = ix + 1; jx < rows_per_file; ++jx){
             int dist = (int) compute_distance(rows[ix], rows[jx]);  
+            //printf("totd: %i\n", dist);
             result[dist] += 1;
         }
     }
@@ -182,11 +183,13 @@ static inline void calculate_distance_frequencies(short **rows, int *result, int
 
 static inline float compute_distance(const short* c_1, const short* c_2){
 
-    float dist_1 = ((float) (c_1[0]-c_2[0]) )/1000 ;
+    float dist_1 = ((float) (c_1[0]-c_2[0]) )/1000 ;     //Problem om c_1[0] är stort och c_2[0] är litet? Får inte plats i short
     float dist_2 = ((float) (c_1[1]-c_2[1]) )/1000;
     float dist_3 = ((float) (c_1[2]-c_2[2]) )/1000;
- 
+
+    //printf("dist: %f %f %f \n", dist_1, dist_2, dist_3);
     float dist = sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3)*100+0.5;
+    //printf("totd: %f\n", dist);
     return dist;
 }
 
