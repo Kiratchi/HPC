@@ -12,6 +12,7 @@ static inline void free_rows(float **rows, int rows_per_file);
 static inline int* allocate_result();
 static inline int count_file_lines(FILE *file);
 static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_file);
+static inline short string_to_point(char *cells, int index);
 static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file);
 static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
@@ -131,13 +132,28 @@ static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_fil
         fseek(file, jx*char_per_row, SEEK_SET);
         fread(cells, sizeof(char), char_per_row * rows_per_block, file);
         
-        // # pragma omp parallell for
+        # pragma omp parallel for
         for (int ix = 0; ix < rows_per_block; ++ix) {
-            sscanf(cells + ix*char_per_row, "%f %f %f", &rows[ix+jx][0], &rows[ix+jx][1], &rows[ix+jx][2]);      
+            //sscanf(cells + ix*char_per_row, "%f %f %f", &rows[ix+jx][0], &rows[ix+jx][1], &rows[ix+jx][2]);      
+            
+            int cells_row_start_index = ix*char_per_row;
+    
+            rows[ix+jx][0] = ((float) string_to_point(cells, cells_row_start_index)) /1000;
+            rows[ix+jx][1] = ((float) string_to_point(cells, cells_row_start_index+8)) /1000;
+            rows[ix+jx][2] = ((float) string_to_point(cells, cells_row_start_index+16)) /1000;
         }
 
     }
     free(cells);
+}
+
+static inline short string_to_point(char *cells, int index){
+    return (44 - cells[index]  ) * (
+                    10000*(cells[index+1]-48)
+                    + 1000* (cells[index+2]-48)
+                    +  100* (cells[index+4]-48)
+                    +   10* (cells[index+5]-48)
+                    +       (cells[index+6]-48));
 }
 
 static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file){
