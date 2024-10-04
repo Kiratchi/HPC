@@ -16,7 +16,7 @@ static inline void calculate_distance_frequencies(float **rows, int *result, int
 static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 1000;
+static const int rows_per_block = 2;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -107,7 +107,9 @@ static inline void free_rows(float **rows, int rows_per_file){
 }
 
 static inline int* allocate_result(){
-    int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
+    //int *result = (int*) malloc(sizeof(int) * max_distance); // 4*3465
+    int *result = (int*) calloc(max_distance, sizeof(int)); // 4*3465
+    
     if (result == NULL){
         fprintf(stderr, "Memory could not be allocated for result");
         exit(1);
