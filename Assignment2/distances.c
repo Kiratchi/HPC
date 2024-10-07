@@ -14,63 +14,94 @@ static inline int* allocate_result();
 static inline void count_file_lines(FILE *file, int *rows_per_file, int *extra_block_size);
 static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int initial_row);
 static inline short string_to_point(char *cells, int index);
-static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file);
+static inline void calculate_distance_frequencies(float **primary_rows,float **secondary_rows, int *result, int nr_rows);
+static inline void calculate_same_distance_frequencies(float **primary_rows, int *result, int nr_rows);
 static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 10;
+static const int rows_per_block = 5;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
 int main(int argc, char const *argv[]) {
 
-    omp_set_num_threads(determine_thread_count(argc, argv));
-    
-    FILE *file = open_file();
-
-    int rows_per_file;
-    int extra_block_size;
-    count_file_lines(file, &rows_per_file, &extra_block_size);
-    
-    float **rows = allocate_rows(rows_per_file);
-    parse_file_to_rows(file, rows, rows_per_file, 0);
-    fclose(file);
-    
-    int *result = allocate_result();
-    calculate_distance_frequencies(rows, result, rows_per_file);
-    free_rows(rows, rows_per_file);
-
-    print_result(result);
-    
-    free(result);
-
-
-    // VARIANT I BLOCK FRÅN HÄR
-
     // omp_set_num_threads(determine_thread_count(argc, argv));
+    
     // FILE *file = open_file();
+
     // int rows_per_file;
     // int extra_block_size;
     // count_file_lines(file, &rows_per_file, &extra_block_size);
+    
+    // float **rows = allocate_rows(rows_per_file);
+    // parse_file_to_rows(file, rows, rows_per_file, 0);
     // fclose(file);
+    
     // int *result = allocate_result();
+    // calculate_same_distance_frequencies(rows, result, rows_per_file);
+    // free_rows(rows, rows_per_file);
+
+    // print_result(result);
+    
+    // free(result);
+
+
+    //VARIANT I BLOCK FRÅN HÄR
+
+    omp_set_num_threads(determine_thread_count(argc, argv));
+    FILE *file = open_file();
+    int rows_per_file;
+    int extra_block_size;   // Håll koll på sista blocket om det blir mindre!
+    count_file_lines(file, &rows_per_file, &extra_block_size);
+    fclose(file);
+    int *result = allocate_result();
     
 
-    // Håll koll på sista blocket om det blir mindre!
-    // for (int initial_row = 0; initial_row < rows_per_file; initial_row += rows_per_block){
-    //     float **rows = allocate_rows(rows_per_block);
-        
-    //     FILE *file = open_file();
-    //     parse_file_to_rows(file, rows, rows_per_block,initial_row);
-    //     fclose(file);
+    float **primary_rows = allocate_rows(rows_per_block);
+    float **secondary_rows = allocate_rows(rows_per_block);
+    
+    for (int primary_initial_row = 0; primary_initial_row < rows_per_file; primary_initial_row += rows_per_block){
+        // printf("Primary_intial_row: %i\n", primary_initial_row);
 
-    //     calculate_distance_frequencies(rows, result, rows_per_block);
-    //     free_rows(rows, rows_per_block);
+        FILE *file = open_file();
+        parse_file_to_rows(file, primary_rows, rows_per_block,primary_initial_row);
+        fclose(file);
         
+        // printf("\n Elements in primary rows \n");
+        // for (int i=0; i<rows_per_block; i++){
+        //     printf("%f %f %f \n", primary_rows[i][0], primary_rows[i][1], primary_rows[i][2]);
+        // }
+        // printf("\n");
 
-    // }
-    // print_result(result);
-    // free(result);
+        calculate_same_distance_frequencies(primary_rows, result, rows_per_block);
+        // printf("results here!! \n");
+        // print_result(result);
+        // printf("\n");
+
+        // printf("prepparing inner loop\n");
+        for (int secondary_initial_row = primary_initial_row+rows_per_block; secondary_initial_row < rows_per_file; secondary_initial_row += rows_per_block){
+            // printf("Secondary_intial_row: %i\n", secondary_initial_row);
+            
+            FILE *file = open_file();
+            parse_file_to_rows(file, secondary_rows, rows_per_block,secondary_initial_row);
+            fclose(file);
+
+            // printf("\n Elements in secondary rows \n");
+            // for (int i=0; i<rows_per_block; i++){
+            //     printf("%f %f %f \n", secondary_rows[i][0], secondary_rows[i][1], secondary_rows[i][2]);
+            // }
+            // printf("\n");
+            
+            calculate_distance_frequencies(primary_rows, secondary_rows ,result, rows_per_block);
+        }
+    }
+    free_rows(secondary_rows, rows_per_block);
+    free_rows(primary_rows, rows_per_block);
+    
+    print_result(result);
+    free(result);
+
+
 
     return 0;
 }
@@ -166,7 +197,7 @@ static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int
     
     for (int jx = 0; jx < nr_rows; jx += rows_per_block) {
         
-        fseek(file, jx*char_per_row + initial_row, SEEK_SET); //Kan ändra till att bara flytta markören
+        fseek(file, (jx+ initial_row)*char_per_row, SEEK_SET); //Kan ändra till att bara flytta markören
         fread(cells, sizeof(char), char_per_row * rows_per_block, file);
         
         # pragma omp parallel for
@@ -193,11 +224,21 @@ static inline short string_to_point(char *cells, int index){
                     +       (cells[index+6]-48));
 }
 
-static inline void calculate_distance_frequencies(float **rows, int *result, int nr_rows){
+static inline void calculate_distance_frequencies(float **primary_rows,float **secondary_rows, int *result, int nr_rows){
+    # pragma omp parallel for reduction( + : result[:max_distance] )
+    for (int ix = 0; ix < nr_rows; ++ix) {
+        for (int jx = ix; jx < nr_rows; ++jx){
+            int dist = (int) compute_distance_index(primary_rows[ix], secondary_rows[jx]);
+            result[dist] += 1;
+        }
+    }
+}
+
+static inline void calculate_same_distance_frequencies(float **primary_rows, int *result, int nr_rows){
     # pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < nr_rows; ++ix) {
         for (int jx = ix + 1; jx < nr_rows; ++jx){
-            int dist = (int) compute_distance_index(rows[ix], rows[jx]);
+            int dist = (int) compute_distance_index(primary_rows[ix], primary_rows[jx]);
             result[dist] += 1;
         }
     }

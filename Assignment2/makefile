@@ -2,10 +2,10 @@
 CC = gcc
 
 
-#CFLAGS = -O3 -march=native -fopenmp		# Normal
+CFLAGS = -O3 -march=native -fopenmp		# Normal
 # CFLAGS = -O3 -march=native 				# Without omp
 # CFLAGS = -Og -g -march=native 			# For perf
-CFLAGS = -Og -g -march=native -fopenmp	# For valgrind
+# CFLAGS = -Og -g -march=native -fopenmp	# For valgrind
 LDFLAGS = -lm
 
 .PHONY: all clean
