@@ -7,17 +7,18 @@
 
 
 static inline int determine_thread_count(int argc, char const *argv[]);
-static inline float** allocate_rows(int rows_per_file);
-static inline void free_rows(float **rows, int rows_per_file);
+static inline FILE* open_file();
+static inline float** allocate_rows(int nr_rows);
+static inline void free_rows(float **rows, int nr_rows);
 static inline int* allocate_result();
-static inline int count_file_lines(FILE *file);
-static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_file);
+static inline void count_file_lines(FILE *file, int *rows_per_file, int *extra_block_size);
+static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int initial_row);
 static inline short string_to_point(char *cells, int index);
 static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file);
 static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 2;
+static const int rows_per_block = 10;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -25,16 +26,14 @@ int main(int argc, char const *argv[]) {
 
     omp_set_num_threads(determine_thread_count(argc, argv));
     
-    FILE *file = fopen("cells", "r");
-    if (file == NULL) {
-        fprintf(stderr, "Error opening file cells!\n");
-        return 1;
-    }
+    FILE *file = open_file();
 
-    int rows_per_file = count_file_lines(file);
+    int rows_per_file;
+    int extra_block_size;
+    count_file_lines(file, &rows_per_file, &extra_block_size);
     
     float **rows = allocate_rows(rows_per_file);
-    parse_file_to_rows(file, rows, rows_per_file);
+    parse_file_to_rows(file, rows, rows_per_file, 0);
     fclose(file);
     
     int *result = allocate_result();
@@ -44,6 +43,34 @@ int main(int argc, char const *argv[]) {
     print_result(result);
     
     free(result);
+
+
+    // VARIANT I BLOCK FRÅN HÄR
+
+    // omp_set_num_threads(determine_thread_count(argc, argv));
+    // FILE *file = open_file();
+    // int rows_per_file;
+    // int extra_block_size;
+    // count_file_lines(file, &rows_per_file, &extra_block_size);
+    // fclose(file);
+    // int *result = allocate_result();
+    
+
+    // Håll koll på sista blocket om det blir mindre!
+    // for (int initial_row = 0; initial_row < rows_per_file; initial_row += rows_per_block){
+    //     float **rows = allocate_rows(rows_per_block);
+        
+    //     FILE *file = open_file();
+    //     parse_file_to_rows(file, rows, rows_per_block,initial_row);
+    //     fclose(file);
+
+    //     calculate_distance_frequencies(rows, result, rows_per_block);
+    //     free_rows(rows, rows_per_block);
+        
+
+    // }
+    // print_result(result);
+    // free(result);
 
     return 0;
 }
@@ -72,25 +99,34 @@ static inline int determine_thread_count(int argc, char const *argv[]){
     return T;
 }
 
-static inline int count_file_lines(FILE *file){
+static inline FILE* open_file(){
+    FILE *file = fopen("cells", "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file cells!\n");
+        exit(1);
+    }
+    return file;
+}
+
+static inline void count_file_lines(FILE *file, int *rows_per_file, int *extra_block_size){
     fseek(file, 0, SEEK_END);
-    int rows_per_file = ftell(file) / char_per_row;
-    //int extra_block_size = rows_per_file % rows_per_block;            // Lägg in det här senare!!! 
-    if (rows_per_file % rows_per_block != 0) {
+    *rows_per_file = ftell(file) / char_per_row;
+    *extra_block_size = *rows_per_file % rows_per_block;            // Lägg in det här senare!!! 
+    if (*extra_block_size != 0) {
         fprintf(stderr, "Number of rows not divisible by %i\n", rows_per_block);
         //printf("Extra block with %i rows created", extra_block_size);
         exit(1);
     }
-    return rows_per_file;
+    fseek(file, 0, SEEK_SET);
 }
 
-static inline float** allocate_rows(int rows_per_file){
-    float **rows = (float**) malloc(sizeof(float*) * rows_per_file);
+static inline float** allocate_rows(int nr_rows){
+    float **rows = (float**) malloc(sizeof(float*) * nr_rows);
     if (rows == NULL){
         fprintf(stderr, "Memory could not be allocated for rows");
         exit(1);
     }
-    for (int ix = 0; ix < rows_per_file; ++ix) {
+    for (int ix = 0; ix < nr_rows; ++ix) {
         rows[ix] = (float*) malloc(sizeof(float) * 3);
         if (rows[ix] == NULL) {
             fprintf(stderr, "Memory could not be allocated for row %i",ix);
@@ -100,8 +136,8 @@ static inline float** allocate_rows(int rows_per_file){
     return rows;
 }
 
-static inline void free_rows(float **rows, int rows_per_file){
-    for (int ix = 0; ix < rows_per_file; ++ix) {
+static inline void free_rows(float **rows, int nr_rows){
+    for (int ix = 0; ix < nr_rows; ++ix) {
         free(rows[ix]);
     }
     free(rows);
@@ -118,18 +154,19 @@ static inline int* allocate_result(){
     return result;
 }
 
-static inline void parse_file_to_rows(FILE *file, float **rows, int rows_per_file){
+static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int initial_row){
     
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * rows_per_file);
+    // Kan vi skippa cells när vi gör saker i blocks?
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * nr_rows);
     if (cells == NULL){
         fprintf(stderr, "Memory could not be allocated for cells");
         exit(1);
     }
-    fseek(file, 0, SEEK_SET);
+    fseek(file, 0, SEEK_SET); //Kan skippa om vi är smarta
     
-    for (int jx = 0; jx < rows_per_file; jx += rows_per_block) {
+    for (int jx = 0; jx < nr_rows; jx += rows_per_block) {
         
-        fseek(file, jx*char_per_row, SEEK_SET);
+        fseek(file, jx*char_per_row + initial_row, SEEK_SET); //Kan ändra till att bara flytta markören
         fread(cells, sizeof(char), char_per_row * rows_per_block, file);
         
         # pragma omp parallel for
@@ -156,10 +193,10 @@ static inline short string_to_point(char *cells, int index){
                     +       (cells[index+6]-48));
 }
 
-static inline void calculate_distance_frequencies(float **rows, int *result, int rows_per_file){
+static inline void calculate_distance_frequencies(float **rows, int *result, int nr_rows){
     # pragma omp parallel for reduction( + : result[:max_distance] )
-    for (int ix = 0; ix < rows_per_file; ++ix) {
-        for (int jx = ix + 1; jx < rows_per_file; ++jx){
+    for (int ix = 0; ix < nr_rows; ++ix) {
+        for (int jx = ix + 1; jx < nr_rows; ++jx){
             int dist = (int) compute_distance_index(rows[ix], rows[jx]);
             result[dist] += 1;
         }
