@@ -19,7 +19,7 @@ static inline void calculate_same_distance_frequencies(float **primary_rows, int
 static inline float compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 5;
+static const int rows_per_block = 250;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[]) {
 
         FILE *file = open_file();
         parse_file_to_rows(file, primary_rows, rows_per_block,primary_initial_row);
-        fclose(file);
+        // fclose(file);
         
         // printf("\n Elements in primary rows \n");
         // for (int i=0; i<rows_per_block; i++){
@@ -82,9 +82,9 @@ int main(int argc, char const *argv[]) {
         for (int secondary_initial_row = primary_initial_row+rows_per_block; secondary_initial_row < rows_per_file; secondary_initial_row += rows_per_block){
             // printf("Secondary_intial_row: %i\n", secondary_initial_row);
             
-            FILE *file = open_file();
+            // FILE *file = open_file();
             parse_file_to_rows(file, secondary_rows, rows_per_block,secondary_initial_row);
-            fclose(file);
+            // fclose(file);
 
             // printf("\n Elements in secondary rows \n");
             // for (int i=0; i<rows_per_block; i++){
@@ -94,6 +94,8 @@ int main(int argc, char const *argv[]) {
             
             calculate_distance_frequencies(primary_rows, secondary_rows ,result, rows_per_block);
         }
+
+        fclose(file);
     }
     free_rows(secondary_rows, rows_per_block);
     free_rows(primary_rows, rows_per_block);
@@ -131,7 +133,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells_1e4", "r");
+    FILE *file = fopen("cells_1e5", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
