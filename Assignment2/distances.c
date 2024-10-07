@@ -53,7 +53,7 @@ int main(int argc, char const *argv[]) {
     int rows_per_file;
     int extra_block_size;   // Håll koll på sista blocket om det blir mindre!
     count_file_lines(file, &rows_per_file, &extra_block_size);
-    fclose(file);
+    // fclose(file);
     int *result = allocate_result();
     
 
@@ -63,7 +63,7 @@ int main(int argc, char const *argv[]) {
     for (int primary_initial_row = 0; primary_initial_row < rows_per_file; primary_initial_row += rows_per_block){
         // printf("Primary_intial_row: %i\n", primary_initial_row);
 
-        FILE *file = open_file();
+        // FILE *file = open_file();
         parse_file_to_rows(file, primary_rows, rows_per_block,primary_initial_row);
         // fclose(file);
         
@@ -95,8 +95,9 @@ int main(int argc, char const *argv[]) {
             calculate_distance_frequencies(primary_rows, secondary_rows ,result, rows_per_block);
         }
 
-        fclose(file);
+        
     }
+    fclose(file);
     free_rows(secondary_rows, rows_per_block);
     free_rows(primary_rows, rows_per_block);
     
@@ -133,7 +134,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells_1e5", "r");
+    FILE *file = fopen("cells_1e4", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
