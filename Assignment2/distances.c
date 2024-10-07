@@ -16,10 +16,10 @@ static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int
 static inline short string_to_point(char *cells, int index);
 static inline void calculate_distance_frequencies(float **primary_rows,float **secondary_rows, int *result, int nr_rows);
 static inline void calculate_same_distance_frequencies(float **primary_rows, int *result, int nr_rows);
-static inline float compute_distance_index(const float *c_1, const float *c_2);
+static inline int compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 250;
+static const int rows_per_block = 10000;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -134,7 +134,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells_1e4", "r");
+    FILE *file = fopen("cells", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
@@ -246,21 +246,21 @@ static inline void calculate_same_distance_frequencies(float **primary_rows, int
     # pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < nr_rows; ++ix) {
         for (int jx = ix + 1; jx < nr_rows; ++jx){
-            int dist = (int) compute_distance_index(primary_rows[ix], primary_rows[jx]);
+            int dist = compute_distance_index(primary_rows[ix], primary_rows[jx]);
             result[dist] += 1;
         }
     }
 }
 
-static inline float compute_distance_index(const float* c_1, const float* c_2){
+static inline int compute_distance_index(const float* c_1, const float* c_2){
 
     float dist_1 = (c_1[0]-c_2[0]);
     float dist_2 = (c_1[1]-c_2[1]);
     float dist_3 = (c_1[2]-c_2[2]);
 
-    float dist = sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3) * 100.0f;
+    int dist = (int) (sqrtf(dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3) * 100.0f + 0.5f);
     
-    return dist + 0.5f;
+    return dist;
 }
 
 static inline void print_result(int *result){
