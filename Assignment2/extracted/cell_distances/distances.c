@@ -131,7 +131,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells_1e4", "r");
+    FILE *file = fopen("cells", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
