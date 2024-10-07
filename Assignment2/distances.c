@@ -131,7 +131,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells", "r");
+    FILE *file = fopen("cells_1e4", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
@@ -151,6 +151,9 @@ static inline void count_file_lines(FILE *file, int *rows_per_file, int *extra_b
     fseek(file, 0, SEEK_SET);
 }
 
+
+// Här tappar vi minne pga "pointe -> pointer -> float", vi borde ha "pointer -> float".
+// Och även för alignment requirement för floats. Att ändra till en lång array hjälper i bägge fall.
 static inline float** allocate_rows(int nr_rows){
     float **rows = (float**) malloc(sizeof(float*) * nr_rows);
     if (rows == NULL){
@@ -188,7 +191,9 @@ static inline int* allocate_result(){
 static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int initial_row){
     
     // Kan vi skippa cells när vi gör saker i blocks?
-    char *cells = (char*) malloc(sizeof(char) * char_per_row * nr_rows);
+
+    // Göra oss av med cells, för att vi redan gör koden i block.
+    char *cells = (char*) malloc(sizeof(char) * char_per_row * nr_rows); 
     if (cells == NULL){
         fprintf(stderr, "Memory could not be allocated for cells");
         exit(1);
@@ -217,17 +222,17 @@ static inline void parse_file_to_rows(FILE *file, float **rows, int nr_rows, int
 
 static inline short string_to_point(char *cells, int index){
     return (44 - cells[index]  ) * (
-                    10000*(cells[index+1]-48)
-                    + 1000* (cells[index+2]-48)
-                    +  100* (cells[index+4]-48)
-                    +   10* (cells[index+5]-48)
-                    +       (cells[index+6]-48));
+                     10000* (cells[index+1]-'0')
+                    + 1000* (cells[index+2]-'0')
+                    +  100* (cells[index+4]-'0')
+                    +   10* (cells[index+5]-'0')
+                    +       (cells[index+6]-'0'));
 }
 
 static inline void calculate_distance_frequencies(float **primary_rows,float **secondary_rows, int *result, int nr_rows){
     # pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < nr_rows; ++ix) {
-        for (int jx = ix; jx < nr_rows; ++jx){
+        for (int jx = 0; jx < nr_rows; ++jx){
             int dist = (int) compute_distance_index(primary_rows[ix], secondary_rows[jx]);
             result[dist] += 1;
         }
