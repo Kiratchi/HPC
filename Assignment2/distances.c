@@ -17,7 +17,7 @@ static inline void calculate_same_distance_frequencies(float *primary_rows, int 
 static inline int compute_distance_index(const float *c_1, const float *c_2);
 static inline void print_result(int *result);
 
-static const int rows_per_block = 1000;
+static const int rows_per_block = 10000;
 static const int char_per_row = 24;
 static const unsigned int max_distance = 3465; // from sqrt(20^2*3)
 
@@ -78,7 +78,7 @@ static inline int determine_thread_count(int argc, char const *argv[]){
 }
 
 static inline FILE* open_file(){
-    FILE *file = fopen("cells_1e5", "r");
+    FILE *file = fopen("cells", "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file cells!\n");
         exit(1);
@@ -153,7 +153,7 @@ static inline void calculate_distance_frequencies(float *primary_rows,float *sec
     # pragma omp parallel for reduction( + : result[:max_distance] )
     for (int ix = 0; ix < primary_rows_per_block; ++ix) {
         for (int jx = 0; jx < secondary_rows_per_block; ++jx){
-            int dist = (int) compute_distance_index(&primary_rows[3*ix], &secondary_rows[3*jx]);
+            int dist = compute_distance_index(&primary_rows[3*ix], &secondary_rows[3*jx]);
             result[dist] += 1;
         }
     }

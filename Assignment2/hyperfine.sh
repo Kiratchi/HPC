@@ -1,2 +1,2 @@
 make
-hyperfine './distances -t1'
+hyperfine "./distances -t1"
