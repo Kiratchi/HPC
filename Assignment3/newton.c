@@ -100,8 +100,8 @@ int main_thrd_compute(
         // Lägg in Newton-func
         for (int jx = 0; jx < sz; ++jx) 
         {
-            attractorsix[jx] = 1.0;
-            convergencesix[jx] = 0;
+            attractorsix[jx] = (float) tx;
+            convergencesix[jx] = tx;
         }
 
         mtx_lock(mtx);
@@ -116,7 +116,7 @@ int main_thrd_compute(
 }
 
 
-int main_thrd_write( // Change to main_thrd_write
+int main_thrd_write( 
     void *args)
 {
     const thrd_arg_write_t *thrd_info = (thrd_arg_write_t *)args;
