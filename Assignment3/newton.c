@@ -239,7 +239,7 @@ int main_thrd_write(
     // Write the header of the PPM file
     int M = 255;
     int L_length = (int)log10(L) + 1;
-    int header_length = L_length + 9;
+    int header_length = 2*L_length + 9;
     char header[header_length];
     sprintf(header, "P3\n%d %d\n%d\n", L, L, M);
     fwrite(header, sizeof(char), header_length, attr_file);
