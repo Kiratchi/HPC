@@ -91,22 +91,20 @@ int main_thrd_compute(
     cnd_t *cnd = thrd_info->cnd;
     int_padded *status = thrd_info->status;
 
-    for (int ix = tx; ix < sz; ix += istep)
-    {
+    for (int ix = tx; ix < sz; ix += istep){
         // We allocate the rows of the result before computing, and free them in another thread.
-        float *attractorsix = (float *)malloc(sz * sizeof(float));
-        int *convergencesix = (int *)malloc(sz * sizeof(int));
+        float *attractors_ix = (float *)malloc(sz * sizeof(float));
+        int *convergences_ix = (int *)malloc(sz * sizeof(int));
 
         // Lägg in Newton-func
-        for (int jx = 0; jx < sz; ++jx) 
-        {
-            attractorsix[jx] = (float) tx;
-            convergencesix[jx] = tx;
+        for (int jx = 0; jx < sz; ++jx) {
+            attractors_ix[jx] = (float) jx;
+            convergences_ix[jx] = (int) jx;
         }
 
         mtx_lock(mtx);
-        attractors[ix] = attractorsix;
-        convergences[ix] = convergencesix;
+        attractors[ix] = (float*) attractors_ix;
+        convergences[ix] = (int*) convergences_ix;
         status[tx].val = ix + istep;
         mtx_unlock(mtx);
         cnd_signal(cnd);
@@ -135,7 +133,7 @@ int main_thrd_write(
     {
 
         // If no new lines are available, we wait.
-        for (mtx_lock(mtx);;)
+        for (mtx_lock(mtx); ; )
         {   
             // We extract the minimum of all status variables.
             ibnd = sz;
@@ -160,12 +158,20 @@ int main_thrd_write(
         fprintf(stderr, "checking until %i\n", ibnd);
 
         // We do not initialize ix in this loop, but in the outer one.
-        for (; ix < ibnd; ++ix)
-        {
+        for (; ix < ibnd; ++ix){
+
+            for ( int jx = 0; jx < sz; ++jx ){
+                printf("%f ", attractors[ix][jx]);
+            }
+            printf("\n");
+            
+
+            
+            
             // We only check the last element in w, since we want to illustrate the
             // situation where the check thread completes fast than the computaton
             // threads.
-            int jx = sz - 1;
+            // int jx = sz - 1;
             //   float diff = v[ix][jx] - w[ix][jx] * w[ix][jx];
             //   if ( diff < -eps || diff > eps ) {
             // fprintf(stderr, "incorrect compuation at %i %i: %f %f %f\n",
@@ -191,10 +197,10 @@ int main(int argc, char const *argv[])
     determine_command_line(argc, argv);
     printf("T: %d, L: %d, power: %d\n", T, L, power); // Ha kvar denna sålänge!
 
-    const int sz = L;
+    const int sz = (const int) L;
 
-    float **attractors = (float **)malloc(sz * sizeof(float *));
-    float **convergence = (float **)malloc(sz * sizeof(float *));
+    float **attractors = (float **) malloc(sz * sizeof(float *));
+    int **convergence = (int **) malloc(sz * sizeof(int *));
 
     // The entries of w will be allocated in the computation threads are freed in
     // the check thread.
@@ -258,6 +264,7 @@ int main(int argc, char const *argv[])
         int r;
         thrd_join(thrd_check, &r);
     }
+
 
     free(attractors);
     free(convergence);
