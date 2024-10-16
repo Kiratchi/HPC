@@ -21,9 +21,9 @@ precomputing the roots is a good idea
 
 
 in multi_stage: 
-    v and w - use output as int for number of iterations the other use not necessary float, think about it
-    don't need an input just because it is in the script...
-    ib and tx - don't need both since they should be the smaller
+    w - use output as int for number of iterations the other use not necessary float, think about it
+    v - don't need an input just because it is in the script...
+    ib and tx - don't need both since they should be the same
     mtx and cnd - for syncronisation
     sz and nthrds - need it
 
