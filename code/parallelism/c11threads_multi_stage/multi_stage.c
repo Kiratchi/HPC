@@ -55,6 +55,9 @@ main_thrd(
     for ( int jx = 0; jx < sz; ++jx )
       wix[jx] = sqrtf(vix[jx]);
 
+    // I DO NOT UNDERSTAND WHAT RÒR WHY THIS WAS IMMPORTANT
+    // BUT IT WAS INDEED IMPORTANT!!!
+    // Remember what he wrote on the board about threads "wating" on each other?
     mtx_lock(mtx);
     w[ix] = wix;
     status[tx].val = ix + istep;
