@@ -1,0 +1,34 @@
+Can change the 1e10 rule to 1e5 if a problem with that occur
+
+Horisontal axis is real axis
+Vertical axis is imaginary axis
+
+the long lines are there for checking the implementation of iterations
+the short lines are there for checking the writing to file
+
+computing the square root cost more than not computing it... 10^-3 is euclidean distances
+
+Write this to see the images:   convert "name".ppm "name".png
+                                magick "name".ppm "name".png
+
+use fwrite! sprintf - can be used when writing to file
+
+think about the geometry when checking convergence etc
+
+precomputing the roots is a good idea
+
+
+in multi_stage: 
+    v and w - use output as int for number of iterations the other use not necessary float, think about it
+    don't need an input just because it is in the script...
+    ib and tx - don't need both since they should be the smaller
+    mtx and cnd - for syncronisation
+    sz and nthrds - need it
+
+clever way of parallelisation - one thread computes the even and one computes the odd values.
+
+communication between writing thread and computing thread. It wants to wait until cimpute haas prolonged enough for it to write to file. - seen in the status variable
+
+thrd_sleep - remove from code because it is only to make code slower
+
+    
