@@ -1,3 +1,5 @@
+/////// ANTECKNINGAR JAFFA
+
 Can change the 1e10 rule to 1e5 if a problem with that occur
 
 Horisontal axis is real axis
@@ -31,4 +33,32 @@ communication between writing thread and computing thread. It wants to wait unti
 
 thrd_sleep - remove from code because it is only to make code slower
 
-    
+
+
+
+/////// ANTECKNINGAR PUMBA
+
+Notes:
+ - 10^5 does the job on  second Point regarding Newton iteration.
+ - 128 contrary to 50 (shure thing is studpid, but just do as he says!). It still doesn't affect the computation very much.
+ - Check "level 3 PPM" on wikipedia.
+ - "Use one thread that writes to disc" is actaully quite crucial, use that technique.
+ - "Data Transfer", don't use too much memory. Don't 
+ - "Writing to file" and "Syncronization" are the two difficult or most important ones.
+ - "Data Transfer", he recommend to use global arrays.
+ - To find errors in the syncronization, look at the four last Points in syncronization. Similar to two Points directly thereafter "When finishing these steps...".
+
+Thoughts:
+ - Last character of a string is a nullterminator, he talks about that this can be used?
+
+Questions:
+ - 
+
+Commands/Code-tips:
+ - convert newton_Attractors_x7.ppm newton_attractors_x7.png (Used for converting the ppm-file to a png file).
+ - magick newton_Attractors_x7.ppm newton_attractors_x7.png (Same as above).
+ - Look at the file "multi_stage.c"!!
+
+Extra:
+ - Thread pools, Memory pools, look up what these things are!
+ - "The mutex is protecting this".

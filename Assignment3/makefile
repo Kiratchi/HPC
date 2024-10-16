@@ -1,10 +1,10 @@
 CC = gcc
 
-CFLAGS = -O3 -march=native					# Normal
+CFLAGS = -O3 -lpthread -march=native					# Normal
 # CFLAGS = -O3 -march=native 				# Without omp
 # CFLAGS = -Og -g -march=native 			# For perf
 # CFLAGS = -Og -g -march=native -fopenmp	# For valgrind
-LDFLAGS = -std=c11 -lm
+LDFLAGS = -lm #-std=c11
 
 .PHONY: all clean
 all: newton
