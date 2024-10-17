@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
 #include <threads.h>
 #include <complex.h>
 
@@ -17,7 +16,6 @@ typedef struct
     char pad[60]; // cacheline - sizeof(int)
 } int_padded;
 
-
 typedef struct
 {
     int **attractors;
@@ -31,7 +29,6 @@ typedef struct
     int_padded *status;
 } thrd_arg_compute_t; // Was thrd_info_t
 
-
 typedef struct
 {
     int **attractors;
@@ -43,6 +40,23 @@ typedef struct
     int_padded *status;
 } thrd_arg_write_t; // Was thrd_info_check_t
 
+const char grey_str[][12] = {
+    "000 000 000 ", "001 001 001 ", "002 002 002", "003 003 003 ", "004 004 004 ", "005 005 005", "006 006 006 ", "007 007 007 ", "008 008 008", "009 009 009 ", "010 010 010 ", "011 011 011", "012 012 012 ", "013 013 013 ", "014 014 014", "015 015 015 ", "016 016 016 ", "017 017 017", "018 018 018 ", "019 019 019 ", "020 020 020", "021 021 021 ", "022 022 022 ", "023 023 023", "024 024 024 ", "025 025 025 ", "026 026 026", "027 027 027 ", "028 028 028 ", "029 029 029", "030 030 030 ", "031 031 031 ", "032 032 032", "033 033 033 ", "034 034 034 ", "035 035 035", "036 036 036 ", "037 037 037 ", "038 038 038", "039 039 039 ", "040 040 040 ", "041 041 041", "042 042 042 ", "043 043 043 ", "044 044 044", "045 045 045 ", "046 046 046 ", "047 047 047", "048 048 048 ", "049 049 049 ", "050 050 050", "051 051 051 ", "052 052 052 ", "053 053 053", "054 054 054 ", "055 055 055 ", "056 056 056", "057 057 057 ", "058 058 058 ", "059 059 059", "060 060 060 ", "061 061 061 ", "062 062 062", "063 063 063 ", "064 064 064 ", "065 065 065", "066 066 066 ", "067 067 067 ", "068 068 068", "069 069 069 ", "070 070 070 ", "071 071 071", "072 072 072 ", "073 073 073 ", "074 074 074", "075 075 075 ", "076 076 076 ", "077 077 077", "078 078 078 ", "079 079 079 ", "080 080 080", "081 081 081 ", "082 082 082 ", "083 083 083", "084 084 084 ", "085 085 085 ", "086 086 086", "087 087 087 ", "088 088 088 ", "089 089 089", "090 090 090 ", "091 091 091 ", "092 092 092", "093 093 093 ", "094 094 094 ", "095 095 095", "096 096 096 ", "097 097 097 ", "098 098 098", "099 099 099 ", "100 100 100 ", "101 101 101", "102 102 102 ", "103 103 103 ", "104 104 104", "105 105 105 ", "106 106 106 ", "107 107 107", "108 108 108 ", "109 109 109 ", "110 110 110", "111 111 111 ", "112 112 112 ", "113 113 113", "114 114 114 ", "115 115 115 ", "116 116 116", "117 117 117 ", "118 118 118 ", "119 119 119", "120 120 120 ", "121 121 121 ", "122 122 122", "123 123 123 ", "124 124 124 ", "125 125 125", "126 126 126 ", "127 127 127 ", "128 128 128"
+};
+
+const char colour_str[][12] = {
+    "000 000 000 ", // Black
+    "255 000 000 ", // Red
+    "000 255 000 ", // Green
+    "000 000 255 ", // Blue
+    "000 255 255 ", // Cyan
+    "255 000 255 ", // Magenta
+    "255 255 000 ", // Yellow
+    "255 165 000 ", // Orange
+    "128 000 128 ", // Purple
+    "165 042 042 ", // Brown
+    "050 205 050 ", // Lime
+};
 
 static inline void determine_command_line(int argc, char const *argv[])
 {
@@ -80,37 +94,41 @@ static inline void determine_command_line(int argc, char const *argv[])
 }
 
 // Function to calculate e^(i*pi*k/K) for k in range(0, K)
-static inline complex float* calculate_exponentials(complex float * result) {
+static inline complex float *calculate_exponentials(complex float *result)
+{
     // Allocate memory for an array to store the complex numbers
 
     // Loop to calculate e^(i*pi*k/K) for each k
-    for (int k = 0; k < power; ++k) {
-        float angle = 2*3.14159265358979 * k / power;  // Calculate the angle (pi * k / K)
-        result[k] = cosf(angle) + I * sinf(angle);  // Euler's formula: e^(i * angle)
+    for (int k = 0; k < power; ++k)
+    {
+        float angle = 2 * 3.14159265358979 * k / power; // Calculate the angle (pi * k / K)
+        result[k] = cosf(angle) + I * sinf(angle);      // Euler's formula: e^(i * angle)
     }
 
     // return result;
     return result;
 }
 
-
-static inline float complex newton_function(const float complex input_number) {
+static inline float complex newton_function(const float complex input_number)
+{
     return cpow(input_number, power) - 1.0f;
 }
 
-static inline float complex newton_derivative(const float complex input_number) {
-    return power * cpow(input_number, power-1);
+static inline float complex newton_derivative(const float complex input_number)
+{
+    return power * cpow(input_number, power - 1);
 }
 
-static inline float complex calculate_root(const int x_cord, const int y_cord, complex float *roots){
+static inline float complex calculate_root(const int x_cord, const int y_cord, complex float *roots)
+{
     float complex z = (float)x_cord + (float)y_cord * I;
     float complex new_z = z;
-    
+
     // This could be changed to 50 instead of 128
     for (size_t ix = 0; ix < 128; ix++)
     {
-        new_z = z - ( newton_function(z) / newton_derivative(z) );
-        
+        new_z = z - (newton_function(z) / newton_derivative(z));
+
         // char close_to_root = "0";
         // for (size_t k = 0; k < L; k++)
         // {
@@ -129,13 +147,12 @@ static inline float complex calculate_root(const int x_cord, const int y_cord, c
         // {
         //     break;
         // }
-        
+
         z = new_z;
     }
-    
+
     return new_z; // Return iteration count as well
 }
-
 
 // static inline float newton_function(const float input_number, const int power)
 
@@ -145,7 +162,7 @@ int main_thrd_compute(
     const thrd_arg_compute_t *thrd_info = (thrd_arg_compute_t *)args;
     int **attractors = thrd_info->attractors;
     int **convergences = thrd_info->convergences;
-    complex float *complex_roots = thrd_info -> complex_roots;
+    complex float *complex_roots = thrd_info->complex_roots;
     const int istep = thrd_info->istep;
     const int sz = thrd_info->sz;
     const int tx = thrd_info->tx;
@@ -153,27 +170,30 @@ int main_thrd_compute(
     cnd_t *cnd = thrd_info->cnd;
     int_padded *status = thrd_info->status;
 
-    for (int ix = tx; ix < sz; ix += istep){
+    for (int ix = tx; ix < sz; ix += istep)
+    {
         // We allocate the rows of the result before computing, and free them in another thread.
         int *attractors_ix = (int *)malloc(sz * sizeof(int));
         int *convergences_ix = (int *)malloc(sz * sizeof(int));
 
         // To guarantee meaningful input values in the writing thread. (from exercise)
-        for ( size_t cx = 0; cx < sz; ++cx ) {
+        for (size_t cx = 0; cx < sz; ++cx)
+        {
             attractors_ix[cx] = 0;
             convergences_ix[cx] = 0;
         }
 
         // Lägg in Newton-func
-        for (int jx = 0; jx < sz; ++jx) {
+        for (int jx = 0; jx < sz; ++jx)
+        {
             // calculate_root(ix,jx, complex_roots);
             attractors_ix[jx] = (int) jx;
             convergences_ix[jx] = (int) jx;
         }
 
         mtx_lock(mtx);
-        attractors[ix] = (int*) attractors_ix;
-        convergences[ix] = (int*) convergences_ix;
+        attractors[ix] = (int *)attractors_ix;
+        convergences[ix] = (int *)convergences_ix;
         status[tx].val = ix + istep;
         mtx_unlock(mtx);
         cnd_signal(cnd);
@@ -182,46 +202,7 @@ int main_thrd_compute(
     return 0;
 }
 
-
-void set_color(int NUMBER, int *COLOUR_RED, int *COLOUR_GREEN, int *COLOUR_BLUE) {
-    switch (NUMBER) {
-        case 0: // Red
-            *COLOUR_RED = 255; *COLOUR_GREEN = 0;   *COLOUR_BLUE = 0;
-            break;
-        case 1: // Green
-            *COLOUR_RED = 0;   *COLOUR_GREEN = 255; *COLOUR_BLUE = 0;
-            break;
-        case 2: // Blue
-            *COLOUR_RED = 0;   *COLOUR_GREEN = 0;   *COLOUR_BLUE = 255;
-            break;
-        case 3: // Cyan
-            *COLOUR_RED = 0;   *COLOUR_GREEN = 255; *COLOUR_BLUE = 255;
-            break;
-        case 4: // Magenta
-            *COLOUR_RED = 255; *COLOUR_GREEN = 0;   *COLOUR_BLUE = 255;
-            break;
-        case 5: // Yellow
-            *COLOUR_RED = 255; *COLOUR_GREEN = 255; *COLOUR_BLUE = 0;
-            break;
-        case 6: // Orange
-            *COLOUR_RED = 255; *COLOUR_GREEN = 165; *COLOUR_BLUE = 0;
-            break;
-        case 7: // Purple
-            *COLOUR_RED = 128; *COLOUR_GREEN = 0;   *COLOUR_BLUE = 128;
-            break;
-        case 8: // Brown
-            *COLOUR_RED = 165; *COLOUR_GREEN = 42;  *COLOUR_BLUE = 42;
-            break;
-        case 9: // Lime
-            *COLOUR_RED = 50;  *COLOUR_GREEN = 205; *COLOUR_BLUE = 50;
-            break;
-        default: // Default to black if NUMBER is out of range
-            *COLOUR_RED = 0;   *COLOUR_GREEN = 0;   *COLOUR_BLUE = 0;
-            break;
-    }
-}
-
-int main_thrd_write( 
+int main_thrd_write(
     void *args)
 {
     const thrd_arg_write_t *thrd_info = (thrd_arg_write_t *)args;
@@ -233,33 +214,36 @@ int main_thrd_write(
     cnd_t *cnd = thrd_info->cnd;
     int_padded *status = thrd_info->status;
 
-    FILE *attr_file = fopen("newton_attractors_xd.ppm", "w");
-    FILE *conv_file = fopen("newton_convergence_xd.ppm", "w");
+    // Name file right
+    char attr_name[25];
+    char conv_name[26];
+    sprintf(attr_name, "newton_attractors_x%d.ppm", power);
+    sprintf(conv_name, "newton_convergence_x%d.ppm", power);
+    FILE *attr_file = fopen(attr_name, "w");
+    FILE *conv_file = fopen(conv_name, "w");
 
-    // Write the header of the PPM file
+    // Write header of the PPM file
     int M = 255;
     int L_length = (int)log10(L) + 1;
-    int header_length = 2*L_length + 9;
+    int header_length = 2 * L_length + 9;
     char header[header_length];
     sprintf(header, "P3\n%d %d\n%d\n", L, L, M);
     fwrite(header, sizeof(char), header_length, attr_file);
     fwrite(header, sizeof(char), header_length, conv_file);
-    char grey_str[12]; // Length for "RRR RRR RRR "
-    char colour_str[12]; // Length for "RRR GGG BBB "
+    // char grey_str[12];   // Length for "RRR RRR RRR "
+    // char colour_str[12]; // Length for "RRR GGG BBB "
 
     // We do not increment ix in this loop, but in the inner one.
     for (int ix = 0, ibnd; ix < sz;)
     {
-
         // If no new lines are available, we wait.
-        for (mtx_lock(mtx); ; )
-        {   
+        for (mtx_lock(mtx);;)
+        {
             // We extract the minimum of all status variables.
             ibnd = sz;
             for (int tx = 0; tx < nthrds; ++tx)
                 if (ibnd > status[tx].val)
                     ibnd = status[tx].val;
-
             if (ibnd <= ix)
                 // Until here the mutex protects status updates, so that if further
                 // updates are pending in blocked threads, there will be a subsequent
@@ -270,62 +254,42 @@ int main_thrd_write(
                 mtx_unlock(mtx);
                 break;
             }
-
         }
 
         // HERE WE SHOULD IMPLEMENT THE WRITE_TO_PPM
         fprintf(stderr, "checking until %i\n", ibnd);
 
         // We do not initialize ix in this loop, but in the outer one.
-        for (; ix < ibnd; ++ix){
-            for ( int jx = 0; jx < sz; ++jx ){
-                int GREY_VALUE = (int) (convergences[ix][jx] * 5);
-                sprintf(grey_str, "%03d %03d %03d ", GREY_VALUE, GREY_VALUE, GREY_VALUE); //Gör om med string encoding
-                fwrite(grey_str, sizeof(char), 12, conv_file);
-                
-                int COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE;
-                set_color(attractors[ix][jx], &COLOUR_RED, &COLOUR_GREEN, &COLOUR_BLUE);
-
-                sprintf(colour_str, "%03d %03d %03d ", COLOUR_RED, COLOUR_GREEN, COLOUR_BLUE);
-                fwrite(colour_str, sizeof(char), 12, attr_file);
+        for (; ix < ibnd; ++ix)
+        {
+            for (int jx = 0; jx < sz; ++jx)
+            {
+                fwrite(grey_str[convergences[ix][jx]], sizeof(char), 12, conv_file);
+                fwrite(colour_str[attractors[ix][jx]], sizeof(char), 12, attr_file);
             }
-            fwrite("\n", sizeof(char), 1, conv_file);
-            fwrite("\n", sizeof(char), 1, attr_file);
 
             // We free the component of attractors and convergnes, SINCE IT WILL NEVER BE USED AGGAAAAAIN!!.
             free(attractors[ix]);
             free(convergences[ix]);
         }
-        fclose(attr_file);
-        fclose(conv_file);
     }
+    fclose(attr_file);
+    fclose(conv_file);
     return 0;
 }
 
-
-
 int main(int argc, char const *argv[])
 {
-
     determine_command_line(argc, argv);
     printf("T: %d, L: %d, power: %d\n", T, L, power); // Ha kvar denna sålänge!
 
     complex float complex_roots[power];
     calculate_exponentials(complex_roots);
-    
 
+    const int sz = (const int)L;
 
-    
-    
-    const int sz = (const int) L;
-
-    float **attractors = (float **) malloc(sz * sizeof(float *));
-    int **convergence = (int **) malloc(sz * sizeof(int *));
-
-
-
-    // The entries of w will be allocated in the computation threads are freed in
-    // the check thread.
+    float **attractors = (float **)malloc(sz * sizeof(float *));
+    int **convergence = (int **)malloc(sz * sizeof(int *));
 
     const int nthrds = T;
     thrd_t thrds[nthrds];
@@ -344,8 +308,8 @@ int main(int argc, char const *argv[])
 
     for (int tx = 0; tx < nthrds; ++tx)
     {
-        thrds_info[tx].attractors = (int**) attractors;
-        thrds_info[tx].convergences = (int**) convergence;
+        thrds_info[tx].attractors = (int **)attractors;
+        thrds_info[tx].convergences = (int **)convergence;
         thrds_info[tx].istep = nthrds;
         thrds_info[tx].sz = sz;
         thrds_info[tx].tx = tx;
@@ -364,8 +328,8 @@ int main(int argc, char const *argv[])
     }
 
     {
-        thrd_info_check.attractors = (int**) attractors;
-        thrd_info_check.convergences = (int**) convergence;
+        thrd_info_check.attractors = (int **)attractors;
+        thrd_info_check.convergences = (int **)convergence;
         thrd_info_check.sz = sz;
         thrd_info_check.nthrds = nthrds;
         thrd_info_check.mtx = &mtx;
@@ -386,7 +350,6 @@ int main(int argc, char const *argv[])
         int r;
         thrd_join(thrd_check, &r);
     }
-
 
     free(attractors);
     free(convergence);

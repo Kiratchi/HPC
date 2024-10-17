@@ -12,5 +12,10 @@ all: newton
 newton: newton.c
 	$(CC) $(CFLAGS) -o newton newton.c $(LDFLAGS)
 
+convert: 
+	for file in *.ppm; do \
+		magick $$file $${file%.ppm}.png; \
+	done
+
 clean:
 	rm -rf newton
