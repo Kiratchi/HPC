@@ -21,3 +21,5 @@ clean:
 	rm -rf newton
 	rm -f newton_attractors_x*.ppm
 	rm -f newton_convergence_x*.ppm
+	rm -f newton_attractors_x*.png
+	rm -f newton_convergence_x*.png
