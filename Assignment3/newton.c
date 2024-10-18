@@ -77,27 +77,16 @@ const char grey_str[][12] = {
     "128 128 128 "};
 
 const char colour_str[][12] = {
-    // "255 000 000 ", // Red
-    // "000 255 000 ", // Green
-    // "000 000 255 ", // Blue
-    // "000 255 255 ", // Cyan
-    // "255 000 255 ", // Magenta
-    // "255 255 000 ", // Yellow
-    // "255 165 000 ", // Orange
-    // "128 000 128 ", // Purple
-    // "165 042 042 ", // Brown
-    // "050 205 050 ", // Lime
-    // "255 215 000 ", // Gold
-    "031 012 066 ", // Dark Purple
-    "085 015 109 ", // Purple
-    "136 034 106 ", // Reddish Purple
-    "186 054 85  ", // Red-Orange
-    "230 088 56  ", // Bright Orange
-    "250 135 38  ", // Orange-Yellow
-    "253 190 48  ", // Bright Yellow
-    "249 243 174 ", // Pale Yellow
-    "255 255 200 ", // Soft Yellow
-    "255 255 255 ", // White (or light)
+    "015 006 033 ", // Dark Purple
+    "042 007 054 ", // Purple
+    "068 017 053 ", // Reddish Purple
+    "093 027 042 ", // Red-Orange
+    "115 044 028 ", // Bright Orange
+    "125 067 019 ", // Orange-Yellow
+    "126 095 024 ", // Bright Yellow
+    "124 121 087 ", // Pale Yellow
+    "128 121 098 ", // Soft Yellow
+    "128 128 128 ", // White (or light)
 };
 
 static inline void determine_command_line(int argc, char const *argv[]) {
@@ -143,51 +132,50 @@ static inline complex float calculate_next_iteration(const float complex z) {
 
   switch (power) {
   case 1:
-    z_new = 1;
+    z_new = 1.0f;
     break;
   case 2:
-    z_new = (z * z + 1) / (2 * z);
+    z_new = z - (1.0f/2.0f) * (z - (1.0f / z));
     break;
   case 3: {
     complex float z2 = z * z;
-    z_new = (2 * z2 * z + 1) / (3 * z2);
+    z_new = z - (1.0f/3.0f) * (z - (1.0f / (z2)));
     break;
   }
   case 4: {
     complex float z2 = z * z;
-    z_new = ((3 * z2 * z2 + 1) / (4 * z2 * z));
+    z_new = z - (1.0f/4.0f) * (z - (1.0f / (z2*z)));
     break;
   }
   case 5: {
     complex float z2 = z * z;
     complex float z4 = z2 * z2;
-    z_new = (4 * z4 * z + 1) / (5 * z4);
+    z_new = z - (1.0f/5.0f) * (z - (1.0f / z4));
     break;
   }
   case 6: {
     complex float z2 = z * z;
     complex float z4 = z2 * z2;
-    z_new = (5 * z4 * z2 + 1) / (6 * z4 * z);
+    z_new = z - (1.0f/6.0f) * (z - (1.0f / (z4*z)));
     break;
   }
   case 7: {
     complex float z2 = z * z;
     complex float z4 = z2 * z2;
-    z_new = (6 * z4 * z2 * z + 1) / (7 * z4 * z2);
+    z_new = z - (1.0f/7.0f) * (z - (1.0f / (z4*z2)));
     break;
   }
   case 8: {
     complex float z2 = z * z;
     complex float z4 = z2 * z2;
-    complex float z8 = z4 * z4;
-    z_new = (7 * z8 + 1) / (8 * z4 * z2 * z);
+    z_new = z - (1.0f/8.0f) * (z - (1.0f / (z4*z2*z)));
     break;
   }
   case 9: {
     complex float z2 = z * z;
     complex float z4 = z2 * z2;
     complex float z8 = z4 * z4;
-    z_new = (8 * z8 * z + 1) / (9 * z8);
+    z_new = z - (1.0f/9.0f) * (z - (1.0f / (z8)));
     break;
   }
   default:
@@ -229,7 +217,7 @@ static inline TwoIntegers calculate_root(const float x_coord, const float y_coor
     }
 
     // Checks if too close or too far away
-    else if (new_abs_z < 1e-12) {
+    else if (new_abs_z < 1e-6) {
       break;
     } else if ((crealf(new_z) > 1e10) || (cimagf(new_z) > 1e10) ||
                (crealf(new_z) < -1e10) || (cimagf(new_z) < -1e10)) {
@@ -301,7 +289,7 @@ int main_thrd_write(void *args) {
   FILE *attr_file = fopen(attr_name, "w");
   FILE *conv_file = fopen(conv_name, "w");
 
-  int M = 255;
+  int M = 128;
   int L_length = (int)log10(L) + 1;
   int header_length = 2 * L_length + 9;
   char header[header_length];
