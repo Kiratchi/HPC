@@ -85,7 +85,6 @@ const char colour_str[][12] = {
     "125 067 019 ", // Orange-Yellow
     "126 095 024 ", // Bright Yellow
     "124 121 087 ", // Pale Yellow
-    "128 121 098 ", // Soft Yellow
     "128 128 128 ", // White (or light)
 };
 
