@@ -10,11 +10,10 @@ int L;
 int power;
 
 typedef struct {
-    int x;
-    int y;
+  int x;
+  int y;
 } TwoIntegers;
 
-// Mmmm, En glorifierad int
 typedef struct {
   int val;
   char pad[60]; // cacheline - sizeof(int)
@@ -78,17 +77,27 @@ const char grey_str[][12] = {
     "128 128 128 "};
 
 const char colour_str[][12] = {
-    "000 000 000 ", // Black
-    "255 000 000 ", // Red
-    "000 255 000 ", // Green
-    "000 000 255 ", // Blue
-    "000 255 255 ", // Cyan
-    "255 000 255 ", // Magenta
-    "255 255 000 ", // Yellow
-    "255 165 000 ", // Orange
-    "128 000 128 ", // Purple
-    "165 042 042 ", // Brown
-    "050 205 050 ", // Lime
+    // "255 000 000 ", // Red
+    // "000 255 000 ", // Green
+    // "000 000 255 ", // Blue
+    // "000 255 255 ", // Cyan
+    // "255 000 255 ", // Magenta
+    // "255 255 000 ", // Yellow
+    // "255 165 000 ", // Orange
+    // "128 000 128 ", // Purple
+    // "165 042 042 ", // Brown
+    // "050 205 050 ", // Lime
+    // "255 215 000 ", // Gold
+    "031 012 066 ", // Dark Purple
+    "085 015 109 ", // Purple
+    "136 034 106 ", // Reddish Purple
+    "186 054 85  ", // Red-Orange
+    "230 088 56  ", // Bright Orange
+    "250 135 38  ", // Orange-Yellow
+    "253 190 48  ", // Bright Yellow
+    "249 243 174 ", // Pale Yellow
+    "255 255 200 ", // Soft Yellow
+    "255 255 255 ", // White (or light)
 };
 
 static inline void determine_command_line(int argc, char const *argv[]) {
@@ -121,67 +130,66 @@ static inline void determine_command_line(int argc, char const *argv[]) {
 static inline complex float *find_exact_roots(complex float *exact_roots) {
   // Loop to calculate e^(i*pi*k/K) for each k
   for (int k = 0; k < power; ++k) {
-    float angle = 2 * 3.14159265358979 * k / power; // Calculate the angle (pi * k / K)
-    exact_roots[k] = cosf(angle) + I * sinf(angle); // Euler's formula: e^(i * angle)
+    float angle =
+        2 * 3.14159265358979 * k / power; // Calculate the angle (pi * k / K)
+    exact_roots[k] =
+        cosf(angle) + I * sinf(angle); // Euler's formula: e^(i * angle)
   }
   return exact_roots;
 }
 
-static inline complex float calculate_next_iteration(const float complex z){
+static inline complex float calculate_next_iteration(const float complex z) {
   complex float z_new;
-  if (crealf(z) == 0.0 || cimagf(z) == 0.0) {
-    return z_new;
-  }
 
-  switch ( power ) {
+  switch (power) {
   case 1:
-    z_new = -1;
+    z_new = 1;
     break;
   case 2:
-    z_new = (z*z - 1) / (2*z);
+    z_new = (z * z + 1) / (2 * z);
     break;
-  case 3:{
-    complex float z2 = z*z;
-    z_new = (2*z2*z - 1) / (3*z2);
+  case 3: {
+    complex float z2 = z * z;
+    z_new = (2 * z2 * z + 1) / (3 * z2);
     break;
-    }
-  case 4:{ 
-    complex float z2 = z*z;
-    z_new = ((3*z2*z2 - 1) / (4*z2*z));
+  }
+  case 4: {
+    complex float z2 = z * z;
+    z_new = ((3 * z2 * z2 + 1) / (4 * z2 * z));
     break;
-    }
-  case 5:{ 
-    complex float z2 = z*z;
-    complex float z4 = z2*z2;
-    z_new = (4*z4*z - 1) / (5*z4);
+  }
+  case 5: {
+    complex float z2 = z * z;
+    complex float z4 = z2 * z2;
+    z_new = (4 * z4 * z + 1) / (5 * z4);
     break;
-    }
-  case 6:{ 
-    complex float z2 = z*z;
-    complex float z4 = z2*z2;
-    z_new = (5*z4*z2 - 1) / (6*z4*z);
+  }
+  case 6: {
+    complex float z2 = z * z;
+    complex float z4 = z2 * z2;
+    z_new = (5 * z4 * z2 + 1) / (6 * z4 * z);
     break;
-    }
-  case 7:{ 
-    complex float z2 = z*z;
-    complex float z4 = z2*z2;
-    z_new = (6*z4*z2*z - 1) / (7*z4*z2);
+  }
+  case 7: {
+    complex float z2 = z * z;
+    complex float z4 = z2 * z2;
+    z_new = (6 * z4 * z2 * z + 1) / (7 * z4 * z2);
     break;
-    }
-  case 8:{ 
-    complex float z2 = z*z;
-    complex float z4 = z2*z2;
-    complex float z8 = z4*z4;
-    z_new = (7*z8 - 1) / (8*z4*z2*z);
+  }
+  case 8: {
+    complex float z2 = z * z;
+    complex float z4 = z2 * z2;
+    complex float z8 = z4 * z4;
+    z_new = (7 * z8 + 1) / (8 * z4 * z2 * z);
     break;
-    }
-  case 9:{ 
-    complex float z2 = z*z;
-    complex float z4 = z2*z2;
-    complex float z8 = z4*z4;
-    z_new = (8*z8*z - 1) / (9*z8);
+  }
+  case 9: {
+    complex float z2 = z * z;
+    complex float z4 = z2 * z2;
+    complex float z8 = z4 * z4;
+    z_new = (8 * z8 * z + 1) / (9 * z8);
     break;
-    }
+  }
   default:
     fprintf(stderr, "unexpected degree\n");
     exit(1);
@@ -189,76 +197,53 @@ static inline complex float calculate_next_iteration(const float complex z){
   return z_new;
 }
 
-static inline TwoIntegers calculate_root(const int x_cord, const int y_cord,
-                                           complex float *exact_roots) {
-  complex float z = (float)x_cord + (float)y_cord * I;  
+static inline TwoIntegers calculate_root(const float x_coord, const float y_coord,
+                                         complex float *exact_roots) {
+  complex float z = x_coord + y_coord * I;
   complex float new_z = z;
 
-  int right_one = 0;
-  if (x_cord == -3 && y_cord == 1){
-    right_one = 1;
-  }
-
-  // This could be changed to 50 instead of 128 (för konvergensbilden ja men
-  // inte för attractorbilden)
   int iter_counter = 0;
   int idx_closest = 0;
-  for (size_t ix = 0; ix < 128; ix++) {
+  for (int ix = 0; ix < 128; ix++) {
 
     iter_counter += 1;
-  	new_z = calculate_next_iteration(z);
-    float new_abs_z = crealf(new_z) * crealf(new_z) + cimagf(new_z) * cimagf(new_z);
-
-    if (right_one == 1) {
-      printf("Real Part %f and Comp part %f \n", crealf(new_z), cimagf(new_z));
-    }
+    new_z = calculate_next_iteration(z);
+    float new_abs_z =
+        crealf(new_z) * crealf(new_z) + cimagf(new_z) * cimagf(new_z);
 
     short int close_to_root = 0;
-    for (size_t k = 0; k < power; k++)
-    {
-        if ( cabsf(new_z - exact_roots[k]) < 0.001) {
-            close_to_root = 1;
-            int idx_closest = k;
-            break;
-        }
-    }
-    if (close_to_root == 1){
+    
+    for (int kx = 0; kx < power; kx++) {
+      float real_diff = crealf(new_z - exact_roots[kx]);
+      float imag_diff = cimagf(new_z - exact_roots[kx]);
+      float dist_squared = (real_diff * real_diff) +
+                     (imag_diff * imag_diff);
+      if (dist_squared < 1e-6) {
+        close_to_root = 1;
+        idx_closest = kx;
         break;
+      }
+    }
+    if (close_to_root == 1) {
+      break;
     }
 
     // Checks if too close or too far away
-    else if ( fabs(new_abs_z) < 0.001 ) {
-        break;
+    else if (new_abs_z < 1e-12) {
+      break;
+    } else if ((crealf(new_z) > 1e10) || (cimagf(new_z) > 1e10) ||
+               (crealf(new_z) < -1e10) || (cimagf(new_z) < -1e10)) {
+      break;
     }
-    else if ((crealf(new_z) > 100000) || (cimagf(new_z) > 100000)) {
-        break;
-    }
-
     z = new_z;
   }
-  
-  // Here we finds the "index" for the complex value
-//   int idx_closest = 0;
-  // complex float _min_dist = new_z - exact_roots[0];
-  // for (int i = 1; i < power; i++) {
-  //   float dist = new_z - exact_roots[i];
-  //   if (dist < min_dist) {
-  //     min_dist = dist;
-  //     idx_closest = i;
-  //   }
-  // }
 
-  // const TwoIntegers *two_int = (TwoIntegers *) args;
   TwoIntegers output;
   output.x = idx_closest;
   output.y = iter_counter;
-  right_one = 0;
 
-  return output; // Return iteration count as well
+  return output;
 }
-
-// static inline float the_function(const float input_number, const int
-// power)
 
 int main_thrd_compute(void *args) {
   const thrd_arg_compute_t *thrd_info = (thrd_arg_compute_t *)args;
@@ -273,27 +258,19 @@ int main_thrd_compute(void *args) {
   int_padded *status = thrd_info->status;
 
   for (int ix = tx; ix < sz; ix += istep) {
-    // We allocate the rows of the result before computing, and free them in
-    // another thread.
     int *attractors_ix = (int *)malloc(sz * sizeof(int));
     int *convergences_ix = (int *)malloc(sz * sizeof(int));
 
-    // To guarantee meaningful input values in the writing thread. (from
-    // exercise)
     for (size_t cx = 0; cx < sz; ++cx) {
       attractors_ix[cx] = 0;
       convergences_ix[cx] = 0;
     }
 
-    // Lägg in Newton-func
     for (int jx = 0; jx < sz; ++jx) {
-      TwoIntegers counts = calculate_root(jx-sz/2, ix-sz/2, exact_roots);
+      TwoIntegers counts =
+          calculate_root((float) (( (float) jx*4.0f / (float) sz) - 2.0f), (float) (((float) ix*4.0f / (float) sz) - 2.0f) , exact_roots);
       attractors_ix[jx] = counts.x;
       convergences_ix[jx] = counts.y;
-      // attractors_ix[jx] = (5479 * ix * jx + 3919 * ix + 7043 * jx) %
-                      //    10; // För att göra lite roligare bilder
-      // convergences_ix[jx] = (5479 * ix * jx + 3919 * ix + 7043 * jx) %
-                      //      127; // För att göra lite roligare bilder
     }
 
     mtx_lock(mtx);
@@ -317,7 +294,6 @@ int main_thrd_write(void *args) {
   cnd_t *cnd = thrd_info->cnd;
   int_padded *status = thrd_info->status;
 
-  // Name file right
   char attr_name[25];
   char conv_name[26];
   sprintf(attr_name, "newton_attractors_x%d.ppm", power);
@@ -325,7 +301,6 @@ int main_thrd_write(void *args) {
   FILE *attr_file = fopen(attr_name, "w");
   FILE *conv_file = fopen(conv_name, "w");
 
-  // Write header of the PPM file
   int M = 255;
   int L_length = (int)log10(L) + 1;
   int header_length = 2 * L_length + 9;
@@ -334,38 +309,24 @@ int main_thrd_write(void *args) {
   fwrite(header, sizeof(char), header_length, attr_file);
   fwrite(header, sizeof(char), header_length, conv_file);
 
-  // We do not increment ix in this loop, but in the inner one.
   for (int ix = 0, ibnd; ix < sz;) {
-    // If no new lines are available, we wait.
     for (mtx_lock(mtx);;) {
-      // We extract the minimum of all status variables.
       ibnd = sz;
       for (int tx = 0; tx < nthrds; ++tx)
         if (ibnd > status[tx].val)
           ibnd = status[tx].val;
       if (ibnd <= ix)
-        // Until here the mutex protects status updates, so that if further
-        // updates are pending in blocked threads, there will be a subsequent
-        // signal.
         cnd_wait(cnd, mtx);
       else {
         mtx_unlock(mtx);
         break;
       }
     }
-
-    // HERE WE SHOULD IMPLEMENT THE WRITE_TO_PPM
-    fprintf(stderr, "checking until %i\n", ibnd);
-
-    // We do not initialize ix in this loop, but in the outer one.
     for (; ix < ibnd; ++ix) {
       for (int jx = 0; jx < sz; ++jx) {
         fwrite(grey_str[convergences[ix][jx]], sizeof(char), 12, conv_file);
         fwrite(colour_str[attractors[ix][jx]], sizeof(char), 12, attr_file);
       }
-
-      // We free the component of attractors and convergnes, SINCE IT WILL NEVER
-      // BE USED AGGAAAAAIN!!.
       free(attractors[ix]);
       free(convergences[ix]);
     }
@@ -430,8 +391,6 @@ int main(int argc, char const *argv[]) {
     thrd_info_check.nthrds = nthrds;
     thrd_info_check.mtx = &mtx;
     thrd_info_check.cnd = &cnd;
-    // It is important that we have initialize status in the previous for-loop,
-    // since it will be consumed by the check threads.
     thrd_info_check.status = status;
 
     int r =

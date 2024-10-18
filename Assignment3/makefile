@@ -1,7 +1,6 @@
 CC = gcc
 
-CFLAGS = -O0 -lpthread -march=native					# Normal
-# CFLAGS = -O3 -march=native 				# Without omp
+CFLAGS = -O3 -lpthread -march=native		# Normal
 # CFLAGS = -Og -g -march=native 			# For perf
 # CFLAGS = -Og -g -march=native -fopenmp	# For valgrind
 LDFLAGS = -lm #-std=c11
