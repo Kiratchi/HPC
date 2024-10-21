@@ -222,7 +222,7 @@ static inline TwoIntegers calculate_root(const float x_coord, const float y_coor
     // Checks if too close or too far away
     else if (new_abs_z < 1e-6) {
       break;
-    } else if ((abs(crealf(new_z)) > 1e10) || (abs(cimagf(new_z)) > 1e10)) {
+    } else if ((fabsf(crealf(new_z)) > 1e10) || (fabsf(cimagf(new_z)) > 1e10)) {
       break;
     }
     z = new_z;
