@@ -22,3 +22,8 @@ clean:
 	rm -f newton_convergence_x*.ppm
 	rm -f newton_attractors_x*.png
 	rm -f newton_convergence_x*.png
+
+submit: clean
+	rm -r extracted
+	tar czf submit.tar.gz newton.c makefile
+	/home/hpc2024/newton_iteration/check_submission.jl submit.tar.gz
